@@ -30,6 +30,8 @@ pytest-django = "^4.5.2"
 pytest = "^7.4.0"
 pytest-cov = "^4.1.0"
 mypy = "^1.4.1"
+strawberry-graphql = "^0.219.1"
+django-stubs = "^4.2.7"
 
 [build-system]
 requires = ["poetry-core"]

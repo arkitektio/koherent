@@ -1,3 +1,4 @@
+from typing import AsyncIterator, Iterator, Union
 from strawberry.extensions import SchemaExtension
 from koherent.vars import (
     current_assignation_app,
@@ -7,7 +8,7 @@ from koherent.vars import (
 
 
 class KoherentExtension(SchemaExtension):
-    def on_operation(self):
+    def on_operation(self) -> Union[AsyncIterator[None], Iterator[None]]:
         t1 = current_assignation_id.set(
             self.execution_context.context.request.assignation_id
         )
@@ -17,5 +18,3 @@ class KoherentExtension(SchemaExtension):
         current_assignation_id.reset(t1)
         current_assignation_app.reset(t2)
         current_assignation_user.reset(t3)
-
-        print("GraphQL operation end")

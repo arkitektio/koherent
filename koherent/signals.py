@@ -7,10 +7,12 @@ from koherent.vars import (
     current_assignation_id,
     current_assignation_user,
 )
+from typing import Any
 
 
 @receiver(pre_create_historical_record)
-def add_history_app(sender, **kwargs):
+def add_history_app(sender: Any, **kwargs: Any) -> None:
+    """Add some context to the history instance"""
     history_instance = kwargs["history_instance"]
     history_instance.app = current_assignation_app.get()
     history_instance.assignation_id = current_assignation_id.get()
