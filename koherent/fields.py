@@ -1,10 +1,10 @@
-from koherent.models import AppHistoryModel
+from koherent.models import ProvenanceEntryModel
 from django.contrib.contenttypes.fields import GenericRelation
 from simple_history.models import HistoricalRecords, HistoricForeignKey
 from typing import Any
 
 
-def HistoryField(**kwargs: Any) -> HistoricalRecords:
+def ProvenanceField(**kwargs: Any) -> HistoricalRecords:
     """A shortcut to create a HistoricalRecords field.
 
     TODO: Strongly type this function.
@@ -12,12 +12,12 @@ def HistoryField(**kwargs: Any) -> HistoricalRecords:
     """
 
     return HistoricalRecords(
-        bases=[AppHistoryModel], related_name="provenance", **kwargs
+        bases=[ProvenanceEntryModel], related_name="provenance_entries", **kwargs
     )
 
 
 __all__ = [
-    "HistoryField",
+    "ProvenanceField",
     "HistoricForeignKey",
     "GenericRelation",
 ]

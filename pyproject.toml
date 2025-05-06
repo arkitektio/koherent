@@ -1,15 +1,15 @@
-[tool.poetry]
+[project]
 name = "koherent"
 version = "0.1.2"
 description = ""
-authors = ["jhnnsrs <jhnnsrs@gmail.com>"]
+authors = [{ name = "jhnnsrs", email = "jhnnsrs@gmail.com" }]
+requires-python = ">=3.11,<4"
 readme = "README.md"
-packages = [{ include = "koherent" }]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-django-simple-history = "^3.3.0"
-authentikate = ">=0.1.6"
+dependencies = [
+    "authentikate>=0.10",
+    "django-simple-history>=3.8.0",
+    "django>5",
+]
 
 
 [tool.mypy]
@@ -17,25 +17,21 @@ plugins = ["mypy_django_plugin.main"]
 ignore_missing_imports = true
 strict = true
 
+[tool.hatch.build.targets.sdist]
+include = ["koherent"]
+
+[tool.hatch.build.targets.wheel]
+include = ["koherent"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.django-stubs]
 django_settings_module = "test_project.settings"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "test_project.settings"
-
-[tool.poetry.group.dev.dependencies]
-django = "^4.2.4"
-pytest-django = "^4.5.2"
-pytest = "^7.4.0"
-pytest-cov = "^4.1.0"
-mypy = "^1.4.1"
-strawberry-graphql = "^0.219.1"
-django-stubs = "^4.2.7"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 # Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
@@ -83,3 +79,11 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Assume Python 3.10.
 target-version = "py310"
+
+[tool.uv]
+dev-dependencies = [
+    "cryptography>=44.0.3",
+    "daphne>=4.1.2",
+    "pytest-asyncio>=0.26.0",
+    "pytest-django>=4.11.1",
+]
