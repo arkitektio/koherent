@@ -1,5 +1,4 @@
 from django.db import models
-from authentikate.models import Client, User
 from koherent.fields import ProvenanceField
 
 # Create your models here.
@@ -13,4 +12,5 @@ class MyModel(models.Model):
     provenance = ProvenanceField()
 
     class Meta:
+        """ Model to test the Koherent extension. """
         ordering = ["-id"]

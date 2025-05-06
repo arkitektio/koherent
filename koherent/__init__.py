@@ -1,1 +1,6 @@
-__version__ = "0.0.1"
+""" The Koherent package. 
+
+Allows to manage Provenace in Django applications, through
+simple and easy to use fields.
+
+"""

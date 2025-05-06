@@ -218,7 +218,7 @@ async def test_can_track_provenance(db, valid_auth_and_assignation_headers, key_
     for i in answer["data"]["updateModel"]["provenanceEntries"]:
         assert i["user"] is not None
         assert i["user"]["sub"] is not None
-        assert i["during"] is not None, "Expected during to be present because we have assignation headers"
+        assert i["during"] is not None, "Expected during to be present because"
         assert i["kind"] is not None
 
     # Send the mutation via HTTP

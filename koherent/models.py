@@ -16,7 +16,7 @@ class ProvenanceEntryModel(models.Model):
         ordering = ["-history_date"]
         
 
-from .signals import add_history_app
+from .signals import add_history_app # noqa: E402
 
 __all__ = [
     add_history_app
