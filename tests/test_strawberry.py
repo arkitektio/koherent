@@ -199,6 +199,7 @@ async def test_can_track_provenance(db, valid_auth_and_assignation_headers, key_
                         sub
                     }
                     kind
+                    date
                     during
                     
                 }
