@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.0 (2025-05-06)
+
+### Features
+
+- Add date field to provenance tracking test
+  ([`ca6f7f9`](https://github.com/arkitektio/koherent/commit/ca6f7f9bcefe36f69e993abf7515a9a891ac193f))
+
+
 ## v0.1.1 (2025-05-06)
 
 
