@@ -25,3 +25,23 @@ def get_current_task_payload() -> TaskPayload | None:
         The current task payload
     """
     return current_task_payload.get()
+
+
+def get_current_task() -> "Task | None":
+    """
+    Get the Task row resolved for the current context, if any
+
+    Returns
+    -------
+    Task | None
+        The cached task row, set by `koherent.utils.get_or_create_task`
+    """
+    return current_task.get()
+
+
+__all__ = [
+    "current_task_payload",
+    "current_task",
+    "get_current_task_payload",
+    "get_current_task",
+]

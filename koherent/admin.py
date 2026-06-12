@@ -18,3 +18,6 @@ class TaskAdmin(admin.ModelAdmin):  # type: ignore
     list_select_related = ("organization",)
     search_fields = ("task_id", "assigner_sub", "app", "action")
     list_filter = ("organization",)
+    raw_id_fields = ("assigner", "organization")
+    date_hierarchy = "created_at"
+    readonly_fields = ("created_at",)

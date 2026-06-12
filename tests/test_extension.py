@@ -9,7 +9,7 @@ from strawberry.types.graphql import OperationType
 from authentikate.base_models import Task as TaskPayload
 from kante.context import HttpContext, UniversalRequest, WsContext
 from koherent.strawberry.extension import KoherentExtension
-from koherent.vars import current_task_payload
+from koherent.vars import current_task, current_task_payload
 
 
 def _extension(context, operation_type=OperationType.QUERY) -> KoherentExtension:
@@ -57,6 +57,23 @@ async def test_http_task_payload_set_during_operation_and_reset() -> None:
 
     await _finish(gen)
     assert current_task_payload.get() is None
+
+
+@pytest.mark.asyncio
+async def test_http_task_cache_cleared_during_operation_and_restored() -> None:
+    """A Task row cached by a previous operation is never reused."""
+    stale = SimpleNamespace(task_id="task-stale")
+    reset = current_task.set(stale)  # type: ignore[arg-type]
+    try:
+        gen = _extension(_http_context(_payload())).on_operation()
+
+        await gen.__anext__()
+        assert current_task.get() is None
+
+        await _finish(gen)
+        assert current_task.get() is stale
+    finally:
+        current_task.reset(reset)
 
 
 @pytest.mark.asyncio

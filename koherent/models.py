@@ -35,6 +35,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
+        """ A human readable representation of the task, useful in admin and debugging. """
         return f"Task {self.task_id}"
 
 
@@ -55,6 +56,7 @@ class ProvenanceEntryModel(models.Model):
     )
 
     class Meta:
+        """ This is an abstract base model, not a real table. It provides common fields and behavior for all history models. """
         abstract = True
         ordering = ["-history_date"]
 

@@ -121,8 +121,60 @@ def test_concurrent_create_race_resolves_existing_row(auth_context, monkeypatch)
     from django.db import IntegrityError
 
     user, org = auth_context
+    real_create = Task.objects.create
+
+    def lost_race(**kwargs):
+        # The concurrent request inserts the row between our existence check
+        # and our insert attempt.
+        real_create(
+            task_id="task-race",
+            assigner=user,
+            assigner_sub="1",
+            app="testapp",
+            action="hash",
+            organization=org,
+        )
+        raise IntegrityError("duplicate key value violates unique constraint")
+
+    monkeypatch.setattr(Task.objects, "create", lost_race)
+    reset = current_task_payload.set(_payload(user="1", task_id="task-race"))
+    try:
+        task = get_or_create_task()
+        assert task is not None
+        assert task.task_id == "task-race"
+        assert Task.objects.count() == 1
+    finally:
+        current_task_payload.reset(reset)
+
+
+def test_existing_task_row_skips_assigner_lookup(
+    auth_context, django_assert_num_queries
+) -> None:
+    """The warm path costs one query and never resolves the assigner."""
+    _, org = auth_context
     existing = Task.objects.create(
-        task_id="task-race",
+        task_id="task-warm",
+        assigner_sub="ghost",
+        app="testapp",
+        action="hash",
+        organization=org,
+    )
+
+    # "ghost" doesn't match the request user, so the cold path would run the
+    # assigner resolution query; the warm path must not.
+    reset = current_task_payload.set(_payload(user="ghost", task_id="task-warm"))
+    try:
+        with django_assert_num_queries(1):
+            assert get_or_create_task() == existing
+    finally:
+        current_task_payload.reset(reset)
+
+
+def test_existing_task_row_survives_missing_organization(auth_context) -> None:
+    """An existing row is returned even when the auth context lacks an org."""
+    user, org = auth_context
+    existing = Task.objects.create(
+        task_id="task-noorg",
         assigner=user,
         assigner_sub="1",
         app="testapp",
@@ -130,13 +182,10 @@ def test_concurrent_create_race_resolves_existing_row(auth_context, monkeypatch)
         organization=org,
     )
 
-    def lost_race(**kwargs):
-        raise IntegrityError("duplicate key value violates unique constraint")
-
-    monkeypatch.setattr(Task.objects, "get_or_create", lost_race)
-    reset = current_task_payload.set(_payload(user="1", task_id="task-race"))
+    reset_org = organization_var.set(None)
+    reset_payload = current_task_payload.set(_payload(user="1", task_id="task-noorg"))
     try:
         assert get_or_create_task() == existing
-        assert Task.objects.count() == 1
     finally:
-        current_task_payload.reset(reset)
+        current_task_payload.reset(reset_payload)
+        organization_var.reset(reset_org)

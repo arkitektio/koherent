@@ -18,6 +18,7 @@ mutation($yourField: String!) {
         provenanceEntries {
             id
             kind
+            effectiveChanges { field oldValue newValue }
             task {
                 taskId
                 assignerSub
@@ -45,6 +46,8 @@ async def test_create_without_task(transactional_db, auth_headers) -> None:
     assert created["id"] is not None
     entry = created["provenanceEntries"][0]
     assert entry["kind"] == "CREATE"
+    # The creation entry has no previous record to diff against.
+    assert entry["effectiveChanges"] == []
     assert entry["task"] is None
     assert await sync_to_async(Task.objects.count)() == 0
 

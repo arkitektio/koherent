@@ -5,7 +5,7 @@ from strawberry.extensions import SchemaExtension
 from strawberry.types.graphql import OperationType
 
 from kante.context import HttpContext, WsContext
-from koherent.vars import current_task_payload
+from koherent.vars import current_task, current_task_payload
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ class KoherentExtension(SchemaExtension):
         context = self.execution_context.context
 
         reset_task_payload = None
+        reset_task = None
 
         if isinstance(context, WsContext):
             # A websocket connection (and its headers) is persistent across
@@ -37,6 +38,8 @@ class KoherentExtension(SchemaExtension):
             task = context.request._task  # the `task` property raises when unset
             if task is not None:
                 reset_task_payload = current_task_payload.set(task)
+                # Never reuse a Task row resolved during a previous operation.
+                reset_task = current_task.set(None)
 
         else:
             raise ValueError(
@@ -46,6 +49,8 @@ class KoherentExtension(SchemaExtension):
         try:
             yield
         finally:
+            if reset_task is not None:
+                current_task.reset(reset_task)
             if reset_task_payload is not None:
                 current_task_payload.reset(reset_task_payload)
 
