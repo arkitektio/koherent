@@ -1,6 +1,40 @@
 # CHANGELOG
 
 
+## v2.0.0 (2026-06-12)
+
+### Features
+
+- Batch effective changes across instances and trim task resolution queries
+  ([`f823de4`](https://github.com/arkitektio/koherent/commit/f823de42416232c2436c75d1245555d79ca6544e))
+
+Performance: - effectiveChanges now resolves through a per-request DataLoader (one per history
+  model), so all instances selected in an operation share a single history_relation_id__in
+  sibling-history query instead of one query per instance. Diffs are computed inside the loader's
+  sync hop, where diff_against may query for m2m-tracked fields. - get_or_create_task() checks for
+  the existing Task row before resolving the assigner, so requests under an already-persisted task
+  cost one query instead of two. An existing row is now returned even when the auth context carries
+  no organization (the org only guards creation). - KoherentExtension clears the resolved-Task
+  contextvar per operation, so a cached row can never leak between operations.
+
+API: - ProvenanceField accepts related_name and bases (defaults unchanged, no migrations needed). -
+  The loader registry uses kante's public get_extension/set_extension instead of reaching into
+  request._extensions. - New get_current_task() accessor next to get_current_task_payload(), both
+  re-exported from the package root. - TaskAdmin gains raw_id_fields, date_hierarchy and
+  readonly_fields.
+
+BREAKING CHANGE: ProvenanceEntry.effective_changes is an async resolver now and requires async
+  schema execution (schema.execute); execute_sync no longer works for queries selecting
+  effectiveChanges.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+### Breaking Changes
+
+- Provenanceentry.effective_changes is an async resolver now and requires async schema execution
+  (schema.execute); execute_sync no longer works for queries selecting effectiveChanges.
+
+
 ## v1.0.1 (2026-06-12)
 
 ### Bug Fixes
