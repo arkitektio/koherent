@@ -5,6 +5,7 @@ from strawberry.scalars import JSON
 from authentikate.strawberry.types import Client, Organization, User
 from kante.types import Info
 from enum import Enum
+from typing import Any
 import datetime
 
 
@@ -44,6 +45,47 @@ class Task:
     created_at: datetime.datetime
 
 
+def _sibling_history(info: Info, record: Any) -> tuple[dict, dict]:
+    """Fetch all history rows of the record's instance once per request.
+
+    Returns (rows_by_history_id, prev_by_history_id), where prev matches
+    simple_history's prev_record semantics (strictly earlier history_date).
+    Cached on the request so every sibling's effective_changes resolves
+    from one query instead of one prev_record query per entry.
+    """
+    model = type(record)
+    key = (model, record.history_relation_id)
+
+    request = getattr(info.context, "request", None)
+    extensions = getattr(request, "_extensions", None)
+    store = (
+        extensions.setdefault("koherent_sibling_history", {})
+        if extensions is not None
+        else {}
+    )
+
+    if key not in store:
+        rows = model._default_manager.filter(
+            history_relation_id=record.history_relation_id
+        ).order_by("history_date", "history_id")
+
+        rows_by_id: dict = {}
+        prev_by_id: dict = {}
+        group_date = None
+        prev_of_group = None
+        last = None
+        for row in rows:
+            if row.history_date != group_date:
+                prev_of_group = last
+                group_date = row.history_date
+            rows_by_id[row.history_id] = row
+            prev_by_id[row.history_id] = prev_of_group
+            last = row
+        store[key] = (rows_by_id, prev_by_id)
+
+    return store[key]
+
+
 @strawberry_django.type(ProvenanceEntryModel, pagination=True, description="A provenance event for a model.")
 class ProvenanceEntry:
     """ A change made to a model."""
@@ -51,42 +93,35 @@ class ProvenanceEntry:
     task: Task | None = strawberry_django.field(
         description="The task during which the change occurred, if any."
     )
+    user: User | None = strawberry_django.field(
+        field_name="history_user", description="User who made the change."
+    )
+    kind: HistoryKind = strawberry_django.field(
+        field_name="history_type", description="The type of change that was made."
+    )
+    date: datetime.datetime = strawberry_django.field(
+        field_name="history_date", description="The date of the change."
+    )
+    id: strawberry.ID = strawberry_django.field(
+        field_name="history_id", description="The ID of the history entry."
+    )
 
-    @strawberry_django.field(description="User who made the change.")
-    def user(self, info: Info) -> User | None:
-        """This method returns the user who made the change."""
-        return self.history_user # type: ignore
-
-    @strawberry_django.field(description="The type of change that was made.")
-    def kind(self, info: Info) -> HistoryKind:
-        """This method returns the type of change that was made."""
-        return self.history_type
-
-    @strawberry_django.field(description="The date of the change.")
-    def date(self, info: Info) -> datetime.datetime:
-        """This method returns the date of the change."""
-        return self.history_date
-
-    @strawberry_django.field(description="The ID of the history entry.")
-    def id(self, info: Info) -> strawberry.ID:
-        """This method returns the ID of the history entry."""
-        return self.history_id
-
-    @strawberry_django.field(description="The effective changes made to the model.")
+    @strawberry_django.field(
+        description="The effective changes made to the model.",
+        only=["history_relation"],
+    )
     def effective_changes(self, info: Info) -> list[ModelChange]:
         """This method returns the effective changes made to the model."""
-        new_record, old_record = self, self.prev_record
-
-        changes = []
+        rows_by_id, prev_by_id = _sibling_history(info, self)
+        # The cached row carries all columns, so diff_against never hits
+        # deferred fields pruned by the optimizer's only().
+        new_record = rows_by_id.get(self.history_id, self)  # type: ignore[attr-defined]
+        old_record = prev_by_id.get(self.history_id)  # type: ignore[attr-defined]
         if old_record is None:
-            return changes
+            return []
 
         delta = new_record.diff_against(old_record)
-        for change in delta.changes:
-            changes.append(
-                ModelChange(
-                    field=change.field, old_value=change.old, new_value=change.new
-                )
-            )
-
-        return changes
+        return [
+            ModelChange(field=change.field, old_value=change.old, new_value=change.new)
+            for change in delta.changes
+        ]

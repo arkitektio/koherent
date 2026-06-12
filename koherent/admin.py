@@ -15,5 +15,6 @@ class TaskAdmin(admin.ModelAdmin):  # type: ignore
     """Admin for persisted Rekuest tasks."""
 
     list_display = ("task_id", "assigner_sub", "app", "action", "organization", "created_at")
+    list_select_related = ("organization",)
     search_fields = ("task_id", "assigner_sub", "app", "action")
     list_filter = ("organization",)

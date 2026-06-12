@@ -44,7 +44,7 @@ wheels = [
 
 [[package]]
 name = "authentikate"
-version = "2.0.0"
+version = "2.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -54,9 +54,9 @@ dependencies = [
     { name = "kante" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/2f/1f0a691aecb9200f590fbf6d6eb76a36a33e6f13772cc5091cc53ba6e119/authentikate-2.0.0.tar.gz", hash = "sha256:59816fd85a5394e8292c2e357a84f52ff302e91d314e72bb5bf7e7dfb54a9efc", size = 20619, upload-time = "2026-06-12T13:36:34.533Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b1/10/d678b915fe16852f442225795e82b6c9fe2155845183488eef129cf84c4e/authentikate-2.0.1.tar.gz", hash = "sha256:6aa94a2abd42986d2b95c81f4d7deadbfaf87c6edb4b9ae8b7df51ecb4c071d2", size = 20717, upload-time = "2026-06-12T15:31:00.038Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fe/0c/1f7b44fd82a9834b0b89ac1ce1fe1aad348092cc23fd8f805e05823f995d/authentikate-2.0.0-py3-none-any.whl", hash = "sha256:049847432c2875fc14f3eeb81296c40faeb1fca559b120d9ac0d5fb2b3e8edf6", size = 27086, upload-time = "2026-06-12T13:36:33.269Z" },
+    { url = "https://files.pythonhosted.org/packages/70/fb/3b8b9d3b0cf3204b7e6aff0e52fd52ba3f4e98113046c8d6b8a0707df20f/authentikate-2.0.1-py3-none-any.whl", hash = "sha256:65ff246048a65a7805687f2249c48eed15b2aef7b01f6509614e7d6cbf5d665b", size = 27182, upload-time = "2026-06-12T15:31:00.832Z" },
 ]
 
 [[package]]
@@ -595,12 +595,13 @@ wheels = [
 
 [[package]]
 name = "koherent"
-version = "0.2.0"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "authentikate" },
     { name = "django" },
     { name = "django-simple-history" },
+    { name = "kante" },
 ]
 
 [package.dev-dependencies]
@@ -615,9 +616,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "authentikate", specifier = ">=2" },
+    { name = "authentikate", specifier = ">=2.0.1" },
     { name = "django", specifier = ">5" },
     { name = "django-simple-history", specifier = ">=3.8.0" },
+    { name = "kante", specifier = ">=1.2.0" },
 ]
 
 [package.metadata.requires-dev]
