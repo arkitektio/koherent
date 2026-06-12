@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.0.1 (2026-06-12)
+
+### Bug Fixes
+
+- New tests
+  ([`571f1aa`](https://github.com/arkitektio/koherent/commit/571f1aacd160e842527f9d80436d0ac71e0f387f))
+
+
 ## v1.0.0 (2026-06-12)
 
 ### Features
