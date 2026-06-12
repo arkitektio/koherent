@@ -1,14 +1,27 @@
 import contextvars
+from typing import TYPE_CHECKING
 
-current_assignation_id = contextvars.ContextVar("current_assignation_id", default=None)
-  
-    
-def get_current_assignation_id() -> str | None:
+from authentikate.base_models import Task as TaskPayload
+
+if TYPE_CHECKING:
+    from koherent.models import Task
+
+
+current_task_payload: contextvars.ContextVar[TaskPayload | None] = (
+    contextvars.ContextVar("current_task_payload", default=None)
+)
+current_task: contextvars.ContextVar["Task | None"] = contextvars.ContextVar(
+    "current_task", default=None
+)
+
+
+def get_current_task_payload() -> TaskPayload | None:
     """
-    Get the current assignation id from the context variable
+    Get the current validated Rekuest task payload from the context variable
+
     Returns
     -------
-    str | None
-        The current assignation id
+    TaskPayload | None
+        The current task payload
     """
-    return current_assignation_id.get()
+    return current_task_payload.get()

@@ -45,10 +45,18 @@ INSTALLED_APPS = [
 
 MY_SCRIPT_NAME = ""
 
+# authentikate >= 2 settings shape: trusted issuers + static test tokens.
+# Static tokens bypass signature verification, so no real keys are needed
+# (the issuer entry is a structurally-valid placeholder that is never used).
 AUTHENTIKATE = {
-    "KEY_TYPE": "RS256",
-    "PUBLIC_KEY_PEM_FILE": "public_key.pem",
-    "FORCE_CLIENT": False,
+    "issuers": [
+        {"kind": "jwks_dict", "iss": "placeholder_issuer", "jwks": {"keys": []}},
+    ],
+    "static_tokens": {
+        # sub "1", iss "static_issuer", active_org "static_org" (StaticToken defaults)
+        "test": {"sub": "1"},
+        "othertest": {"sub": "9", "active_org": "other_org"},
+    },
 }
 
 AUTH_USER_MODEL = "authentikate.User"

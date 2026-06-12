@@ -1,240 +1,124 @@
-""" Test that a Http request receives a broadcast from an HTTP mutation."""
+"""End-to-end tests for provenance and task tracking over HTTP."""
 
 import pytest
-import asyncio
-from uuid import uuid4
+from asgiref.sync import sync_to_async
 
 from test_project.asgi import application
-from kante.testing import GraphQLHttpTestClient, GraphQLWebSocketTestClient
-from django.conf import settings
+from kante.testing import GraphQLHttpTestClient
+
+from authentikate.models import Membership, Organization, User
+from koherent.models import Task
+from tests.conftest import task_header
+
+
+CREATE_MODEL = """
+mutation($yourField: String!) {
+    createModel(yourField: $yourField) {
+        id
+        provenanceEntries {
+            id
+            kind
+            task {
+                taskId
+                assignerSub
+                app
+                action
+            }
+        }
+    }
+}
+"""
+
+
+async def create_model(headers: dict[str, str], your_field: str = "test") -> dict:
+    client = GraphQLHttpTestClient(application=application, headers=headers)
+    answer = await client.execute(CREATE_MODEL, variables={"yourField": your_field})
+    assert answer.get("data"), f"Expected data to be present {answer}"
+    return answer["data"]["createModel"]
+
 
 @pytest.mark.asyncio
-async def test_can_create_models(db, valid_auth_headers, key_pair_str) -> None:
-    """ Test that a WebSocket subscription receives a broadcast from an HTTP mutation."""
-    # Initialize both clients
-    
-    
-    
-    # Set the public key in settings
-    settings.AUTHENTIKATE["PUBLIC_KEY"] = key_pair_str.public_key
-    
-    
-    
-    http_client = GraphQLHttpTestClient(application=application,
-                                        headers=valid_auth_headers)
-    
-    
-    # Send the mutation via HTTP
-    answer = await http_client.execute(
-        query="""
-        mutation {
-            createModel(yourField: "test") {
-                id
-            }
-        }
-        """,
-    )
-    
-    
+async def test_create_without_task(transactional_db, auth_headers) -> None:
+    """Without a task header nothing is persisted and the entry has no task."""
+    created = await create_model(auth_headers)
 
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    assert answer["data"]["createModel"] is not None
-    assert answer["data"]["createModel"]["id"] is not None
+    assert created["id"] is not None
+    entry = created["provenanceEntries"][0]
+    assert entry["kind"] == "CREATE"
+    assert entry["task"] is None
+    assert await sync_to_async(Task.objects.count)() == 0
 
-    # Send the mutation via HTTP
-    answer = await http_client.execute(
-        query="""
-        query {
-            myModels {
-                id
-            }
-        }
-        """,
-    )
-    
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    
-    assert answer["data"]["myModels"] is not None
-    assert len(answer["data"]["myModels"]) > 0, "Expected at least one model"
-    assert answer["data"]["myModels"][0]["id"] is not None
-    
-    
-    
+
 @pytest.mark.asyncio
-async def test_can_track_provenance(db, valid_auth_headers, key_pair_str) -> None:
-    """ Test that a WebSocket subscription receives a broadcast from an HTTP mutation."""
-    # Initialize both clients
-    
-    
-    
-    # Set the public key in settings
-    settings.AUTHENTIKATE["PUBLIC_KEY"] = key_pair_str.public_key
-    
-    
-    
-    http_client = GraphQLHttpTestClient(application=application,
-                                        headers=valid_auth_headers)
-    
-    
-    # Send the mutation via HTTP
-    answer = await http_client.execute(
-        query="""
-        mutation {
-            createModel(yourField: "test") {
-                id
-                provenanceEntries {
-                    id
-                }
-            }
-        }
-        """,
-    )
-    
-    
-    
-    
-    
+async def test_task_created(transactional_db, task_headers) -> None:
+    """A validated task header creates one task row linked from the history entry."""
+    created = await create_model(task_headers)
 
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    assert answer["data"]["createModel"] is not None
-    assert answer["data"]["createModel"]["id"] is not None
-    
-    
-    
-    answer = await http_client.execute(
-        query="""
-        mutation($yourField: String!, $id: ID!) {
-            updateModel(yourField: $yourField, id: $id) {
-                id
-                provenanceEntries {
-                    id
-                    user {
-                        sub
-                    }
-                    kind
-                    during
-                }
-            }
-        }
-        """,
-        variables={
-            "id": answer["data"]["createModel"]["id"],
-            "yourField": "test updated",
-        },
-    )
+    entry = created["provenanceEntries"][0]
+    assert entry["task"] is not None
+    assert entry["task"]["taskId"] == "task-1"
+    assert entry["task"]["assignerSub"] == "1"
+    assert entry["task"]["app"] == "testapp"
+    assert entry["task"]["action"] == "actionhash"
 
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    assert answer["data"]["updateModel"] is not None
-    assert answer["data"]["updateModel"]["id"] is not None
-    assert len(answer["data"]["updateModel"]["provenanceEntries"]) > 1, "Expected at least one provenance entry {answer}"
+    def check_row() -> None:
+        task = Task.objects.get(task_id="task-1")
+        assert task.args == {"x": 1}
+        assert task.organization.slug == "static_org"
+        assert task.assigner is not None
+        assert task.assigner.sub == "1"
 
-    # Send the mutation via HTTP
-    answer = await http_client.execute(
-        query="""
-        query {
-            myModels {
-                id
-            }
-        }
-        """,
-    )
-    
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    
-    assert answer["data"]["myModels"] is not None
-    assert len(answer["data"]["myModels"]) > 0, "Expected at least one model"
-    assert answer["data"]["myModels"][0]["id"] is not None
-    
-    
-    
+    await sync_to_async(check_row)()
+
+
 @pytest.mark.asyncio
-async def test_can_track_provenance(db, valid_auth_and_assignation_headers, key_pair_str) -> None:
-    """ Test that a WebSocket subscription receives a broadcast from an HTTP mutation."""
-    # Initialize both clients
-    
-    
-    
-    # Set the public key in settings
-    settings.AUTHENTIKATE["PUBLIC_KEY"] = key_pair_str.public_key
-    
-    
-    
-    http_client = GraphQLHttpTestClient(application=application,
-                                        headers=valid_auth_and_assignation_headers)
-    
-    
-    # Send the mutation via HTTP
-    answer = await http_client.execute(
-        query="""
-        mutation {
-            createModel(yourField: "test") {
-                id
-                provenanceEntries {
-                    id
-                }
-            }
-        }
-        """,
-    )
-    
-    
-    
-    
-    
+async def test_task_reused(transactional_db, task_headers) -> None:
+    """Several changes during the same task share a single task row."""
+    await create_model(task_headers, "first")
+    await create_model(task_headers, "second")
 
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    assert answer["data"]["createModel"] is not None
-    assert answer["data"]["createModel"]["id"] is not None
-    
-    
-    
-    answer = await http_client.execute(
-        query="""
-        mutation($yourField: String!, $id: ID!) {
-            updateModel(yourField: $yourField, id: $id) {
-                id
-                provenanceEntries {
-                    id
-                    user {
-                        sub
-                    }
-                    kind
-                    date
-                    during
-                    
-                }
-            }
-        }
-        """,
-        variables={
-            "id": answer["data"]["createModel"]["id"],
-            "yourField": "test updated",
-        },
-    )
+    assert await sync_to_async(Task.objects.count)() == 1
 
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    assert answer["data"]["updateModel"] is not None
-    assert answer["data"]["updateModel"]["id"] is not None
-    
-    for i in answer["data"]["updateModel"]["provenanceEntries"]:
-        assert i["user"] is not None
-        assert i["user"]["sub"] is not None
-        assert i["during"] is not None, "Expected during to be present because"
-        assert i["kind"] is not None
 
-    # Send the mutation via HTTP
-    answer = await http_client.execute(
-        query="""
-        query {
-            myModels {
-                id
-            }
-        }
-        """,
-    )
-    
-    assert answer["data"] is not None, f"Expected data to be present {answer}"
-    
-    assert answer["data"]["myModels"] is not None
-    assert len(answer["data"]["myModels"]) > 0, "Expected at least one model"
-    assert answer["data"]["myModels"][0]["id"] is not None
+@pytest.mark.asyncio
+async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
+    """A task assigned by a same-org member resolves to that member's user row."""
+
+    def seed() -> None:
+        org, _ = Organization.objects.get_or_create(slug="static_org")
+        assigner, _ = User.objects.get_or_create(
+            sub="2", iss="static_issuer", defaults={"username": "static_issuer_2"}
+        )
+        Membership.objects.get_or_create(user=assigner, organization=org)
+
+    await sync_to_async(seed)()
+
+    headers = {**auth_headers, "Rekuest-Task": task_header(task_id="task-2", user="2")}
+    await create_model(headers)
+
+    def check_row() -> None:
+        task = Task.objects.get(task_id="task-2")
+        assert task.assigner is not None
+        assert task.assigner.sub == "2"
+        assert task.assigner_sub == "2"
+
+    await sync_to_async(check_row)()
+
+
+@pytest.mark.asyncio
+async def test_task_for_non_member_rejected(transactional_db, auth_headers) -> None:
+    """A task assigned by an unknown user is rejected before any resolver runs."""
+    headers = {**auth_headers, "Rekuest-Task": task_header(task_id="task-3", user="ghost")}
+    client = GraphQLHttpTestClient(application=application, headers=headers)
+
+    try:
+        answer = await client.execute(CREATE_MODEL, variables={"yourField": "nope"})
+    except Exception:
+        answer = None
+
+    if answer is not None:
+        assert not (answer.get("data") or {}).get("createModel"), (
+            f"Expected the mutation to be rejected {answer}"
+        )
+
+    assert await sync_to_async(Task.objects.count)() == 0

@@ -1,100 +1,37 @@
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
-from pytest_django.fixtures import SettingsWrapper
-import dataclasses
+import base64
+import json
+from typing import Any
+
 import pytest
-import datetime
-import jwt
-import uuid
-
-# Generate a private key
 
 
-@dataclasses.dataclass
-class KeyPair:
-    private_key: rsa.RSAPrivateKey
-    public_key: rsa.RSAPublicKey
-
-
-@dataclasses.dataclass
-class KeyPairStr:
-    private_key: str
-    public_key: str
-
-
-@pytest.fixture(scope="session")
-def private_key() -> rsa.RSAPrivateKey:
-    return rsa.generate_private_key(
-        public_exponent=65537, key_size=2048, backend=default_backend()
-    )
-
-
-@pytest.fixture(scope="session")
-def key_pair(private_key) -> KeyPair:
-    public_key = private_key.public_key()
-
-    return KeyPair(private_key=private_key, public_key=public_key)
-
-
-@pytest.fixture(scope="session")
-def key_pair_str(private_key) -> KeyPairStr:
-    # Generate the public key
-    public_key = private_key.public_key()
-
-    # Serializing the private and public key
-    pem_private = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption(),
-    ).decode("utf-8")
-
-    pem_public = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    ).decode("utf-8")
-
-    return KeyPairStr(private_key=pem_private, public_key=pem_public)
-
-
-@pytest.fixture(scope="session")
-def valid_claims():
-    return {
-        "sub": "1",
-        "iss": "XXXX",
-        "jti": uuid.uuid4().hex,
-        "iat": int(datetime.datetime.now().timestamp()),  # issued at
-        "exp": int(
-            (datetime.datetime.now() + datetime.timedelta(days=1)).timestamp()
-        ),
-        "preferred_username": "farter",
-        "client_id": "XXXX",
-        "scope": "openid profile email",
-        "roles": ["XXXX"],
+def task_header(
+    task_id: str = "task-1",
+    user: str = "1",
+    parent: str | None = None,
+    args: dict[str, Any] | None = None,
+    app: str = "testapp",
+    action: str = "actionhash",
+) -> str:
+    """Build a base64url-encoded Rekuest-Task header payload."""
+    payload = {
+        "id": task_id,
+        "parent": parent,
+        "args": args if args is not None else {"x": 1},
+        "user": user,
+        "app": app,
+        "action": action,
     }
+    return base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
 
 
-@pytest.fixture(scope="session")
-def valid_jwt(valid_claims, key_pair: KeyPair):
-    print(key_pair.private_key)
-    return jwt.encode(
-        valid_claims,
-        key=key_pair.private_key,
-        algorithm="RS256",
-    )
+@pytest.fixture
+def auth_headers() -> dict[str, str]:
+    """Headers for the static "test" token (sub "1", org "static_org")."""
+    return {"Authorization": "Bearer test"}
 
 
-@pytest.fixture(scope="session")
-def valid_auth_headers(valid_jwt):
-    return {
-        "Authorization": f"Bearer {valid_jwt}",
-    }
-
-
-
-@pytest.fixture(scope="session")
-def valid_auth_and_assignation_headers(valid_jwt):
-    return {
-        "Authorization": f"Bearer {valid_jwt}",
-        "x-assignation-id": "XXXX",
-    }
+@pytest.fixture
+def task_headers(auth_headers) -> dict[str, str]:
+    """Auth headers plus a Rekuest task assigned by the requesting user."""
+    return {**auth_headers, "Rekuest-Task": task_header()}

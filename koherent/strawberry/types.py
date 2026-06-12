@@ -1,7 +1,8 @@
-from ..models import ProvenanceEntryModel
+from ..models import ProvenanceEntryModel, Task as TaskModel
 import strawberry_django
 import strawberry
-from authentikate.strawberry.types import Client, User
+from strawberry.scalars import JSON
+from authentikate.strawberry.types import Client, Organization, User
 from kante.types import Info
 from enum import Enum
 import datetime
@@ -23,10 +24,33 @@ class ModelChange:
     new_value: str | None = strawberry.field(description="The new value of the field.")
 
 
+@strawberry_django.type(
+    TaskModel,
+    pagination=True,
+    description="A validated Rekuest task under which changes were made.",
+)
+class Task:
+    """A validated Rekuest task under which changes were made."""
+
+    id: strawberry.ID
+    task_id: str = strawberry_django.field(description="The rekuest task id.")
+    parent_id: str | None = strawberry_django.field(description="The parent task id, if any.")
+    assigner: User | None = strawberry_django.field(description="The user that assigned the task.")
+    assigner_sub: str = strawberry_django.field(description="The raw sub claim of the assigning user.")
+    app: str = strawberry_django.field(description="The assigning app.")
+    action: str = strawberry_django.field(description="The action hash.")
+    args: JSON = strawberry_django.field(description="The arguments the task was assigned with.")
+    organization: Organization = strawberry_django.field(description="The organization the task ran in.")
+    created_at: datetime.datetime
+
+
 @strawberry_django.type(ProvenanceEntryModel, pagination=True, description="A provenance event for a model.")
 class ProvenanceEntry:
     """ A change made to a model."""
     client: Client | None
+    task: Task | None = strawberry_django.field(
+        description="The task during which the change occurred, if any."
+    )
 
     @strawberry_django.field(description="User who made the change.")
     def user(self, info: Info) -> User | None:
@@ -42,11 +66,6 @@ class ProvenanceEntry:
     def date(self, info: Info) -> datetime.datetime:
         """This method returns the date of the change."""
         return self.history_date
-
-    @strawberry_django.field(description="The assignation ID during which the change occurred. If it was happening outside of an assignation, it will be None.")
-    def during(self, info: Info) -> str | None:
-        """This method returns the assignation ID during which the change occurred."""
-        return self.assignation_id
 
     @strawberry_django.field(description="The ID of the history entry.")
     def id(self, info: Info) -> strawberry.ID:
@@ -71,6 +90,3 @@ class ProvenanceEntry:
             )
 
         return changes
-
-
-
