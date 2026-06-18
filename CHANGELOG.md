@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v3.0.0 (2026-06-18)
+
+### Features
+
+- Deserailze from new rekuest token
+  ([`cc65724`](https://github.com/arkitektio/koherent/commit/cc6572443fe265d04137c32ece65ef3eaadddfe2))
+
+
 ## v2.0.0 (2026-06-12)
 
 ### Features
