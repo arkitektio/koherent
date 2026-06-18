@@ -1,4 +1,4 @@
-"""Unit tests for KoherentExtension's task-context lifecycle."""
+"""Unit tests for KoherentExtension's provenance-context lifecycle."""
 
 from types import SimpleNamespace
 
@@ -6,10 +6,11 @@ import pytest
 from strawberry.http.temporal_response import TemporalResponse
 from strawberry.types.graphql import OperationType
 
-from authentikate.base_models import Task as TaskPayload
+from authentikate.provenance import ProvenanceToken
 from kante.context import HttpContext, UniversalRequest, WsContext
 from koherent.strawberry.extension import KoherentExtension
-from koherent.vars import current_task, current_task_payload
+from koherent.vars import current_provenance, current_task
+from tests.conftest import provenance_obj
 
 
 def _extension(context, operation_type=OperationType.QUERY) -> KoherentExtension:
@@ -20,9 +21,10 @@ def _extension(context, operation_type=OperationType.QUERY) -> KoherentExtension
     return ext
 
 
-def _http_context(task: TaskPayload | None) -> HttpContext:
+def _http_context(provenance: ProvenanceToken | None) -> HttpContext:
+    extensions = {} if provenance is None else {"provenance": provenance}
     return HttpContext(
-        request=UniversalRequest(_extensions={}, _task=task),
+        request=UniversalRequest(_extensions=extensions),
         response=TemporalResponse(),
         headers={},
     )
@@ -37,8 +39,8 @@ def _ws_context() -> WsContext:
     )
 
 
-def _payload() -> TaskPayload:
-    return TaskPayload(id="task-e", args={}, user="1", app="testapp", action="hash")
+def _payload() -> ProvenanceToken:
+    return provenance_obj(tsk="task-e")
 
 
 async def _finish(gen) -> None:
@@ -47,16 +49,16 @@ async def _finish(gen) -> None:
 
 
 @pytest.mark.asyncio
-async def test_http_task_payload_set_during_operation_and_reset() -> None:
-    """The validated task is exposed during the operation and reset afterwards."""
+async def test_http_provenance_set_during_operation_and_reset() -> None:
+    """The verified provenance token is exposed during the operation and reset after."""
     payload = _payload()
     gen = _extension(_http_context(payload)).on_operation()
 
     await gen.__anext__()
-    assert current_task_payload.get() == payload
+    assert current_provenance.get() == payload
 
     await _finish(gen)
-    assert current_task_payload.get() is None
+    assert current_provenance.get() is None
 
 
 @pytest.mark.asyncio
@@ -77,22 +79,22 @@ async def test_http_task_cache_cleared_during_operation_and_restored() -> None:
 
 
 @pytest.mark.asyncio
-async def test_http_without_task_leaves_payload_unset() -> None:
-    """A request without a task header sets no task context."""
+async def test_http_without_provenance_leaves_context_unset() -> None:
+    """A request without a provenance token sets no provenance context."""
     gen = _extension(_http_context(None)).on_operation()
 
     await gen.__anext__()
-    assert current_task_payload.get() is None
+    assert current_provenance.get() is None
     await _finish(gen)
 
 
 @pytest.mark.asyncio
-async def test_ws_operation_sets_no_task_context() -> None:
-    """Websocket operations have no per-operation task context."""
+async def test_ws_operation_sets_no_provenance_context() -> None:
+    """Websocket operations have no per-operation provenance context."""
     gen = _extension(_ws_context()).on_operation()
 
     await gen.__anext__()
-    assert current_task_payload.get() is None
+    assert current_provenance.get() is None
     await _finish(gen)
 
 

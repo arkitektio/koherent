@@ -45,6 +45,16 @@ INSTALLED_APPS = [
 
 MY_SCRIPT_NAME = ""
 
+# The Ed25519 public key the test provenance tokens are verified against. Its
+# private half lives in tests/conftest.py, which mints signed provenance tokens.
+# (Provenance tokens have no static-token bypass; the signature is always checked.)
+PROVENANCE_TEST_PUBLIC_JWK = {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "Q5ERwdSKvHLDx8swyRJzrofI4W567dx71oeH_uDH4g4",
+    "kid": "koherent-test-key",
+}
+
 # authentikate >= 2 settings shape: trusted issuers + static test tokens.
 # Static tokens bypass signature verification, so no real keys are needed
 # (the issuer entry is a structurally-valid placeholder that is never used).
@@ -56,6 +66,18 @@ AUTHENTIKATE = {
         # sub "1", iss "static_issuer", active_org "static_org" (StaticToken defaults)
         "test": {"sub": "1"},
         "othertest": {"sub": "9", "active_org": "other_org"},
+    },
+    # Provenance tokens are a separate trust domain (Rekuest issuer, EdDSA).
+    "provenance": {
+        "issuers": [
+            {
+                "kind": "jwks_dict",
+                "iss": "rekuest",
+                "jwks": {"keys": [PROVENANCE_TEST_PUBLIC_JWK]},
+            },
+        ],
+        "audience": "koherent",
+        "algorithms": ["EdDSA"],
     },
 }
 

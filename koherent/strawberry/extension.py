@@ -5,39 +5,44 @@ from strawberry.extensions import SchemaExtension
 from strawberry.types.graphql import OperationType
 
 from kante.context import HttpContext, WsContext
-from koherent.vars import current_task, current_task_payload
+from koherent.vars import current_provenance, current_task
 
 logger = logging.getLogger(__name__)
 
 
 class KoherentExtension(SchemaExtension):
-    """Makes the request's task context available to provenance tracking.
+    """Makes the request's provenance token available to provenance tracking.
 
-    Reads the validated Rekuest task that AuthentikateExtension set on the
+    Reads the verified provenance token that AuthentikateExtension set on the
     request (AuthentikateExtension must run before this extension) and exposes
     it through a context variable, so history signals and helpers like
-    `koherent.utils.get_or_create_task` can attribute changes to the task.
+    `koherent.utils.get_or_create_task` can attribute changes to the assignation.
     """
 
     async def on_operation(self) -> AsyncIterator[None]:
-        """Set the task payload context variable for the operation."""
+        """Set the provenance context variable for the operation."""
 
         context = self.execution_context.context
 
-        reset_task_payload = None
+        reset_provenance = None
         reset_task = None
 
         if isinstance(context, WsContext):
             # A websocket connection (and its headers) is persistent across
-            # operations, so there is no per-operation task context.
+            # operations, so there is no per-operation provenance context.
             # Mutations over websockets are rejected in on_execute.
             pass
 
         elif isinstance(context, HttpContext):
-            # Validated by authentikate against the token.
-            task = context.request._task  # the `task` property raises when unset
-            if task is not None:
-                reset_task_payload = current_task_payload.set(task)
+            # AuthentikateExtension attaches a verified provenance token when one
+            # was presented; the extension getter raises when it is unset.
+            try:
+                provenance = context.request.get_extension("provenance")
+            except ValueError:
+                provenance = None
+
+            if provenance is not None:
+                reset_provenance = current_provenance.set(provenance)
                 # Never reuse a Task row resolved during a previous operation.
                 reset_task = current_task.set(None)
 
@@ -51,11 +56,11 @@ class KoherentExtension(SchemaExtension):
         finally:
             if reset_task is not None:
                 current_task.reset(reset_task)
-            if reset_task_payload is not None:
-                current_task_payload.reset(reset_task_payload)
+            if reset_provenance is not None:
+                current_provenance.reset(reset_provenance)
 
     async def on_execute(self) -> AsyncIterator[None]:
-        """Reject mutations over websockets (no per-operation task context)."""
+        """Reject mutations over websockets (no per-operation provenance context)."""
 
         context = self.execution_context.context
 

@@ -8,7 +8,7 @@ from kante.testing import GraphQLHttpTestClient
 
 from authentikate.models import Membership, Organization, User
 from koherent.models import Task
-from tests.conftest import task_header
+from tests.conftest import provenance_token
 
 
 CREATE_MODEL = """
@@ -20,10 +20,11 @@ mutation($yourField: String!) {
             kind
             effectiveChanges { field oldValue newValue }
             task {
-                taskId
+                assignationId
                 assignerSub
-                app
-                action
+                callerSub
+                agentSub
+                agentClientId
             }
         }
     }
@@ -54,19 +55,20 @@ async def test_create_without_task(transactional_db, auth_headers) -> None:
 
 @pytest.mark.asyncio
 async def test_task_created(transactional_db, task_headers) -> None:
-    """A validated task header creates one task row linked from the history entry."""
+    """A verified provenance token creates one task row linked from the history entry."""
     created = await create_model(task_headers)
 
     entry = created["provenanceEntries"][0]
     assert entry["task"] is not None
-    assert entry["task"]["taskId"] == "task-1"
+    assert entry["task"]["assignationId"] == "task-1"
     assert entry["task"]["assignerSub"] == "1"
-    assert entry["task"]["app"] == "testapp"
-    assert entry["task"]["action"] == "actionhash"
+    assert entry["task"]["callerSub"] == "1"
+    assert entry["task"]["agentSub"] == "1"
+    assert entry["task"]["agentClientId"] == "static"
 
     def check_row() -> None:
-        task = Task.objects.get(task_id="task-1")
-        assert task.args == {"x": 1}
+        task = Task.objects.get(assignation_id="task-1")
+        assert task.root_assignation_id == "task-1"
         assert task.organization.slug == "static_org"
         assert task.assigner is not None
         assert task.assigner.sub == "1"
@@ -85,7 +87,7 @@ async def test_task_reused(transactional_db, task_headers) -> None:
 
 @pytest.mark.asyncio
 async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
-    """A task assigned by a same-org member resolves to that member's user row."""
+    """A root human causer (rcb) other than the agent resolves to that user's row."""
 
     def seed() -> None:
         org, _ = Organization.objects.get_or_create(slug="static_org")
@@ -96,11 +98,11 @@ async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
 
     await sync_to_async(seed)()
 
-    headers = {**auth_headers, "Rekuest-Task": task_header(task_id="task-2", user="2")}
+    headers = {**auth_headers, "Rekuest-Task": provenance_token(tsk="task-2", rcb="2")}
     await create_model(headers)
 
     def check_row() -> None:
-        task = Task.objects.get(task_id="task-2")
+        task = Task.objects.get(assignation_id="task-2")
         assert task.assigner is not None
         assert task.assigner.sub == "2"
         assert task.assigner_sub == "2"
@@ -109,19 +111,18 @@ async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_task_for_non_member_rejected(transactional_db, auth_headers) -> None:
-    """A task assigned by an unknown user is rejected before any resolver runs."""
-    headers = {**auth_headers, "Rekuest-Task": task_header(task_id="task-3", user="ghost")}
-    client = GraphQLHttpTestClient(application=application, headers=headers)
+async def test_task_for_unknown_causer_is_unattributed(transactional_db, auth_headers) -> None:
+    """An rcb with no local user row still records the task with a null assigner."""
+    headers = {**auth_headers, "Rekuest-Task": provenance_token(tsk="task-3", rcb="ghost")}
+    created = await create_model(headers)
 
-    try:
-        answer = await client.execute(CREATE_MODEL, variables={"yourField": "nope"})
-    except Exception:
-        answer = None
+    entry = created["provenanceEntries"][0]
+    assert entry["task"] is not None
+    assert entry["task"]["assignerSub"] == "ghost"
 
-    if answer is not None:
-        assert not (answer.get("data") or {}).get("createModel"), (
-            f"Expected the mutation to be rejected {answer}"
-        )
+    def check_row() -> None:
+        task = Task.objects.get(assignation_id="task-3")
+        assert task.assigner is None
+        assert task.assigner_sub == "ghost"
 
-    assert await sync_to_async(Task.objects.count)() == 0
+    await sync_to_async(check_row)()

@@ -4,28 +4,58 @@ from authentikate.models import Client
 
 
 class Task(models.Model):
-    """A validated Rekuest task under which changes were made.
+    """A verified provenance assignation under which changes were made.
 
-    One row per task id, created lazily the first time a change happens
-    during that task (see `koherent.utils.get_or_create_task`). The payload
-    comes from the Rekuest task header, validated by authentikate against
-    the request's token.
+    One row per assignation, created lazily the first time a change happens
+    under it (see `koherent.utils.get_or_create_task`). The data comes from a
+    signature-verified provenance token (`authentikate.provenance.ProvenanceToken`)
+    that AuthentikateExtension attached to the request.
     """
 
-    task_id = models.CharField(max_length=1000, unique=True, help_text="The rekuest task id")
-    parent_id = models.CharField(max_length=1000, null=True, blank=True, help_text="The parent task id, if any")
+    assignation_id = models.CharField(
+        max_length=1000, unique=True, help_text="This assignation id (provenance tsk)."
+    )
+    parent_assignation_id = models.CharField(
+        max_length=1000,
+        null=True,
+        blank=True,
+        help_text="The immediate parent assignation id, if any.",
+    )
+    root_assignation_id = models.CharField(
+        max_length=1000, help_text="The root assignation id of the whole causal tree."
+    )
     assigner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="assigned_tasks",
-        help_text="The user that assigned the task (resolved from the sub claim)",
+        help_text="The root human causer (resolved from the rcb claim).",
     )
-    assigner_sub = models.CharField(max_length=1000, help_text="The raw sub claim of the assigning user")
-    app = models.CharField(max_length=1000, help_text="The assigning app")
-    action = models.CharField(max_length=1000, help_text="The action hash")
-    args = models.JSONField(default=dict, blank=True, help_text="The arguments the task was assigned with")
+    assigner_sub = models.CharField(
+        max_length=1000, help_text="The raw root human causer sub (rcb claim)."
+    )
+    caller_sub = models.CharField(
+        max_length=1000, help_text="The immediate causer of this hop (sub claim)."
+    )
+    agent_sub = models.CharField(
+        max_length=1000, help_text="The executing agent user sub (act.sub claim)."
+    )
+    agent_client_id = models.CharField(
+        max_length=1000, help_text="The executing agent OAuth client id (act.cid claim)."
+    )
+    issuer = models.CharField(
+        max_length=1000, help_text="The provenance issuer id (iss claim)."
+    )
+    token_id = models.CharField(
+        max_length=1000, unique=True, help_text="The unique single-use token id (jti claim)."
+    )
+    args_hash = models.CharField(
+        max_length=1000, help_text="The SHA-256 of the canonicalized args (ahs claim)."
+    )
+    args_hash_algorithm = models.CharField(
+        max_length=200, help_text="The args canonicalization algorithm/version (aha claim)."
+    )
     organization = models.ForeignKey(
         "authentikate.Organization",
         on_delete=models.CASCADE,
@@ -36,7 +66,7 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         """ A human readable representation of the task, useful in admin and debugging. """
-        return f"Task {self.task_id}"
+        return f"Task {self.assignation_id}"
 
 
 class ProvenanceEntryModel(models.Model):

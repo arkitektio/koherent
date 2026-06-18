@@ -2,7 +2,6 @@ from ..models import ProvenanceEntryModel, Task as TaskModel
 import strawberry_django
 import strawberry
 from strawberry.dataloader import DataLoader
-from strawberry.scalars import JSON
 from asgiref.sync import sync_to_async
 from authentikate.strawberry.types import Client, Organization, User
 from kante.types import Info
@@ -32,19 +31,30 @@ class ModelChange:
 @strawberry_django.type(
     TaskModel,
     pagination=True,
-    description="A validated Rekuest task under which changes were made.",
+    description="A verified provenance assignation under which changes were made.",
 )
 class Task:
-    """A validated Rekuest task under which changes were made."""
+    """A verified provenance assignation under which changes were made."""
 
     id: strawberry.ID
-    task_id: str = strawberry_django.field(description="The rekuest task id.")
-    parent_id: str | None = strawberry_django.field(description="The parent task id, if any.")
-    assigner: User | None = strawberry_django.field(description="The user that assigned the task.")
-    assigner_sub: str = strawberry_django.field(description="The raw sub claim of the assigning user.")
-    app: str = strawberry_django.field(description="The assigning app.")
-    action: str = strawberry_django.field(description="The action hash.")
-    args: JSON = strawberry_django.field(description="The arguments the task was assigned with.")
+    assignation_id: str = strawberry_django.field(description="This assignation id.")
+    parent_assignation_id: str | None = strawberry_django.field(
+        description="The immediate parent assignation id, if any."
+    )
+    root_assignation_id: str = strawberry_django.field(
+        description="The root assignation id of the whole causal tree."
+    )
+    assigner: User | None = strawberry_django.field(description="The root human causer.")
+    assigner_sub: str = strawberry_django.field(description="The raw root human causer sub.")
+    caller_sub: str = strawberry_django.field(description="The immediate causer of this hop.")
+    agent_sub: str = strawberry_django.field(description="The executing agent user sub.")
+    agent_client_id: str = strawberry_django.field(description="The executing agent client id.")
+    issuer: str = strawberry_django.field(description="The provenance issuer id.")
+    token_id: str = strawberry_django.field(description="The unique single-use token id.")
+    args_hash: str = strawberry_django.field(description="The SHA-256 of the canonicalized args.")
+    args_hash_algorithm: str = strawberry_django.field(
+        description="The args canonicalization algorithm/version."
+    )
     organization: Organization = strawberry_django.field(description="The organization the task ran in.")
     created_at: datetime.datetime
 

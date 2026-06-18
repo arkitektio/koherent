@@ -58,4 +58,6 @@ class Mutation:
 
 
 
-schema = strawberry.Schema(query=Query, mutation=Mutation, extensions=[AuthentikateExtension, KoherentExtension, DjangoOptimizerExtension])
+# authentikate's strawberry types carry Apollo Federation @key directives, so
+# the schema must be a federation schema to serialize them.
+schema = strawberry.federation.Schema(query=Query, mutation=Mutation, extensions=[AuthentikateExtension, KoherentExtension, DjangoOptimizerExtension])

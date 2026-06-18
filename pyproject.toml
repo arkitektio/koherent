@@ -1,15 +1,15 @@
 [project]
 name = "koherent"
-version = "2.0.0"
+version = "3.0.0"
 description = ""
 authors = [{ name = "jhnnsrs", email = "jhnnsrs@gmail.com" }]
 requires-python = ">=3.12,<4"
 readme = "README.md"
 dependencies = [
-    "authentikate>=2.0.1",
+    "authentikate>=2.1.1",
     "django-simple-history>=3.8.0",
     "django>5",
-    "kante>=1.2.0",
+    "kante>=2.0.0",
 ]
 
 [tool.uv]
