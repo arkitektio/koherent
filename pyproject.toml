@@ -6,7 +6,7 @@ authors = [{ name = "jhnnsrs", email = "jhnnsrs@gmail.com" }]
 requires-python = ">=3.12,<4"
 readme = "README.md"
 dependencies = [
-    "authentikate>=2.1.1",
+    "authentikate>=2.1.2",
     "django-simple-history>=3.8.0",
     "django>5",
     "kante>=2.0.0",

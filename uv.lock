@@ -44,7 +44,7 @@ wheels = [
 
 [[package]]
 name = "authentikate"
-version = "2.1.1"
+version = "2.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -54,9 +54,9 @@ dependencies = [
     { name = "kante" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e5/98/cb3c9b4c957c6cb1c8b045eb69ba55d5d183992feaa8e0a974aecca60bf2/authentikate-2.1.1.tar.gz", hash = "sha256:92afbf49e393f85fc40f2af6a3b23d68c4078d343100481d2ed6a3624ffabf08", size = 24990, upload-time = "2026-06-18T12:06:18.284Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d5/e7/e56e3ce30093f980b8eda2fa84ec8a327afa08b0ec6946effbb4e3ed3ae1/authentikate-2.1.2.tar.gz", hash = "sha256:b7399310f7c9998a0a6a6fdaf202a798e8370879f42d59aa0871addc6ba52ea7", size = 25689, upload-time = "2026-06-18T14:14:48.321Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/77/d31b1c92b5ea85110f97cabb6195ed2f1331dc308b4a09c1d53532a143bf/authentikate-2.1.1-py3-none-any.whl", hash = "sha256:bdbd7ea7cfc0944b819eab18fd51537a87fa5e5ac5a48f6569f97600b62c1ea8", size = 33509, upload-time = "2026-06-18T12:06:19.132Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/88/6664c309fd2ac63965842ddb26f4a3e5bef837fca3c78f2f2b1a548d2fee/authentikate-2.1.2-py3-none-any.whl", hash = "sha256:fbe4e132bb835c80aeb5abac8abf5b76d98a27838674f8ffead895b1d8423977", size = 34342, upload-time = "2026-06-18T14:14:49.194Z" },
 ]
 
 [[package]]
@@ -595,7 +595,7 @@ wheels = [
 
 [[package]]
 name = "koherent"
-version = "2.0.0"
+version = "3.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "authentikate" },
@@ -616,10 +616,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "authentikate", specifier = ">=2.1.1" },
+    { name = "authentikate", specifier = ">=2.1.2" },
     { name = "django", specifier = ">5" },
     { name = "django-simple-history", specifier = ">=3.8.0" },
-    { name = "kante", specifier = ">=1.2.0" },
+    { name = "kante", specifier = ">=2.0.0" },
 ]
 
 [package.metadata.requires-dev]

@@ -25,6 +25,30 @@ mutation($yourField: String!) {
                 callerSub
                 agentSub
                 agentClientId
+                tokenId
+            }
+        }
+    }
+}
+"""
+
+
+GET_MODEL = """
+query($id: ID!) {
+    myModel(id: $id) {
+        id
+        yourField
+        provenanceEntries {
+            id
+            kind
+            effectiveChanges { field oldValue newValue }
+            task {
+                assignationId
+                assignerSub
+                callerSub
+                agentSub
+                agentClientId
+                tokenId
             }
         }
     }
@@ -37,6 +61,13 @@ async def create_model(headers: dict[str, str], your_field: str = "test") -> dic
     answer = await client.execute(CREATE_MODEL, variables={"yourField": your_field})
     assert answer.get("data"), f"Expected data to be present {answer}"
     return answer["data"]["createModel"]
+
+
+async def get_model(headers: dict[str, str], model_id: str) -> dict:
+    client = GraphQLHttpTestClient(application=application, headers=headers)
+    answer = await client.execute(GET_MODEL, variables={"id": model_id})
+    assert answer.get("data"), f"Expected data to be present {answer}"
+    return answer["data"]["myModel"]
 
 
 @pytest.mark.asyncio
@@ -106,6 +137,68 @@ async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
         assert task.assigner is not None
         assert task.assigner.sub == "2"
         assert task.assigner_sub == "2"
+
+    await sync_to_async(check_row)()
+
+
+@pytest.mark.asyncio
+async def test_provenance_survives_create_then_query(transactional_db, task_headers) -> None:
+    """A model created under a task exposes the same provenance entry when read back.
+
+    Full round trip: the mutation creates the model and its CREATE entry, then a
+    separate myModel query re-fetches that entry by id. The persisted provenance —
+    entry id, kind, and the linked task — must match what the mutation returned.
+    """
+    created = await create_model(task_headers, "round-trip")
+    created_entry = created["provenanceEntries"][0]
+
+    fetched = await get_model(task_headers, created["id"])
+
+    assert fetched["id"] == created["id"]
+    assert fetched["yourField"] == "round-trip"
+
+    # The creation entry is recovered intact through the query path.
+    assert len(fetched["provenanceEntries"]) == 1
+    fetched_entry = fetched["provenanceEntries"][0]
+    assert fetched_entry["id"] == created_entry["id"]
+    assert fetched_entry["kind"] == "CREATE"
+    assert fetched_entry["effectiveChanges"] == []
+
+    # And it is still linked to the task that the mutation recorded, including the
+    # executing agent client id and the single-use token id.
+    assert fetched_entry["task"] == created_entry["task"]
+    assert fetched_entry["task"]["assignationId"] == "task-1"
+    assert fetched_entry["task"]["callerSub"] == "1"
+    assert fetched_entry["task"]["agentClientId"] == "static"
+    assert fetched_entry["task"]["tokenId"]  # jti is persisted and non-empty
+
+    # The query path never spawned a second task row for the same assignation.
+    assert await sync_to_async(Task.objects.count)() == 1
+
+
+@pytest.mark.asyncio
+async def test_agent_client_id_is_carried_through(transactional_db, auth_headers) -> None:
+    """The token's agent client id (act.cid) is persisted and read back verbatim.
+
+    Uses a distinctive client id so the value can only come from the token, proving
+    the field is genuinely wired through create -> query rather than defaulted.
+    """
+    headers = {
+        **auth_headers,
+        "Rekuest-Task": provenance_token(tsk="task-cid", agent_cid="my-agent-client-7"),
+    }
+
+    created = await create_model(headers)
+    created_task = created["provenanceEntries"][0]["task"]
+    assert created_task["agentClientId"] == "my-agent-client-7"
+
+    fetched = await get_model(headers, created["id"])
+    fetched_task = fetched["provenanceEntries"][0]["task"]
+    assert fetched_task["agentClientId"] == "my-agent-client-7"
+
+    def check_row() -> None:
+        task = Task.objects.get(assignation_id="task-cid")
+        assert task.agent_client_id == "my-agent-client-7"
 
     await sync_to_async(check_row)()
 
