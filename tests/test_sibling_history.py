@@ -10,6 +10,7 @@ from django.utils import timezone
 from kante.context import UniversalRequest
 from koherent.strawberry.types import (
     _build_prev_maps,
+    _changes_for,
     _fetch_effective_changes,
     _sibling_changes_loader,
 )
@@ -158,3 +159,35 @@ def test_unknown_relation_id_resolves_to_empty(db) -> None:
         return await loader.load(999999)
 
     assert async_to_sync(load)() == {}
+
+
+def test_build_prev_maps_empty_and_single_row() -> None:
+    """Boundary inputs: an empty history and a lone row pair correctly."""
+    assert _build_prev_maps([]) == ({}, {})
+
+    row = SimpleNamespace(history_id=1, history_date=timezone.now())
+    rows_by_id, prev_by_id = _build_prev_maps([row])
+    assert rows_by_id == {1: row}
+    assert prev_by_id == {1: None}
+
+
+def test_changes_for_stringifies_non_string_values() -> None:
+    """diff_against values of any type become strings; None stays null.
+
+    The is-None check (not a falsy check) must keep False as "False" rather than
+    dropping it to null.
+    """
+    delta = SimpleNamespace(
+        changes=[
+            SimpleNamespace(field="count", old=1, new=2),
+            SimpleNamespace(field="flag", old=False, new=True),
+            SimpleNamespace(field="note", old=None, new="hi"),
+        ]
+    )
+    new_record = SimpleNamespace(diff_against=lambda _old: delta)
+
+    changes = {c.field: c for c in _changes_for(new_record, object())}
+
+    assert (changes["count"].old_value, changes["count"].new_value) == ("1", "2")
+    assert (changes["flag"].old_value, changes["flag"].new_value) == ("False", "True")
+    assert (changes["note"].old_value, changes["note"].new_value) == (None, "hi")

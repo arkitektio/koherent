@@ -20,7 +20,7 @@ schema = strawberry.Schema(query=Query, extensions=[DjangoOptimizerExtension])
 QUERY = """
 query {
   myModels {
-    provenanceEntries {
+    provenance {
       id
       kind
       date
@@ -51,13 +51,13 @@ def test_effective_changes_is_batched(db, django_assert_num_queries) -> None:
         model.your_field = value
         model.save()
 
-    # myModels + provenance_entries prefetch + one sibling-history batch
+    # myModels + provenance prefetch + one sibling-history batch
     with django_assert_num_queries(3):
         result = _execute()
 
     assert result.errors is None
     assert result.data is not None
-    entries = result.data["myModels"][0]["provenanceEntries"]
+    entries = result.data["myModels"][0]["provenance"]
     assert len(entries) == 3
 
     # Meta ordering is -history_date: newest first
@@ -82,7 +82,7 @@ def test_effective_changes_batched_across_instances(
         model.your_field = f"b{i}"
         model.save()
 
-    # myModels + provenance_entries prefetch + ONE batched sibling-history
+    # myModels + provenance prefetch + ONE batched sibling-history
     # query covering all four instances
     with django_assert_num_queries(3):
         result = _execute()
@@ -94,7 +94,7 @@ def test_effective_changes_batched_across_instances(
 
     update_changes = []
     for entry_parent in models:
-        entries = entry_parent["provenanceEntries"]
+        entries = entry_parent["provenance"]
         assert [e["kind"] for e in entries] == ["UPDATE", "CREATE"]
         update_changes.extend(entries[0]["effectiveChanges"])
         assert entries[1]["effectiveChanges"] == []

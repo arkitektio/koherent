@@ -94,7 +94,14 @@ def _changes_for(new_record: Any, old_record: Any | None) -> list[ModelChange]:
         return []
     delta = new_record.diff_against(old_record)
     return [
-        ModelChange(field=change.field, old_value=change.old, new_value=change.new)
+        ModelChange(
+            field=change.field,
+            # diff_against yields the raw field values (ints, datetimes, fk ids,
+            # ...); stringify them to match the str | None GraphQL fields, keeping
+            # None as null rather than the literal "None".
+            old_value=None if change.old is None else str(change.old),
+            new_value=None if change.new is None else str(change.new),
+        )
         for change in delta.changes
     ]
 

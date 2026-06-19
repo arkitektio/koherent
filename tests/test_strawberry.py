@@ -15,7 +15,7 @@ CREATE_MODEL = """
 mutation($yourField: String!) {
     createModel(yourField: $yourField) {
         id
-        provenanceEntries {
+        provenance {
             id
             kind
             effectiveChanges { field oldValue newValue }
@@ -38,7 +38,7 @@ query($id: ID!) {
     myModel(id: $id) {
         id
         yourField
-        provenanceEntries {
+        provenance {
             id
             kind
             effectiveChanges { field oldValue newValue }
@@ -76,7 +76,7 @@ async def test_create_without_task(transactional_db, auth_headers) -> None:
     created = await create_model(auth_headers)
 
     assert created["id"] is not None
-    entry = created["provenanceEntries"][0]
+    entry = created["provenance"][0]
     assert entry["kind"] == "CREATE"
     # The creation entry has no previous record to diff against.
     assert entry["effectiveChanges"] == []
@@ -89,7 +89,7 @@ async def test_task_created(transactional_db, task_headers) -> None:
     """A verified provenance token creates one task row linked from the history entry."""
     created = await create_model(task_headers)
 
-    entry = created["provenanceEntries"][0]
+    entry = created["provenance"][0]
     assert entry["task"] is not None
     assert entry["task"]["assignationId"] == "task-1"
     assert entry["task"]["assignerSub"] == "1"
@@ -150,7 +150,7 @@ async def test_provenance_survives_create_then_query(transactional_db, task_head
     entry id, kind, and the linked task — must match what the mutation returned.
     """
     created = await create_model(task_headers, "round-trip")
-    created_entry = created["provenanceEntries"][0]
+    created_entry = created["provenance"][0]
 
     fetched = await get_model(task_headers, created["id"])
 
@@ -158,8 +158,8 @@ async def test_provenance_survives_create_then_query(transactional_db, task_head
     assert fetched["yourField"] == "round-trip"
 
     # The creation entry is recovered intact through the query path.
-    assert len(fetched["provenanceEntries"]) == 1
-    fetched_entry = fetched["provenanceEntries"][0]
+    assert len(fetched["provenance"]) == 1
+    fetched_entry = fetched["provenance"][0]
     assert fetched_entry["id"] == created_entry["id"]
     assert fetched_entry["kind"] == "CREATE"
     assert fetched_entry["effectiveChanges"] == []
@@ -189,11 +189,11 @@ async def test_agent_client_id_is_carried_through(transactional_db, auth_headers
     }
 
     created = await create_model(headers)
-    created_task = created["provenanceEntries"][0]["task"]
+    created_task = created["provenance"][0]["task"]
     assert created_task["agentClientId"] == "my-agent-client-7"
 
     fetched = await get_model(headers, created["id"])
-    fetched_task = fetched["provenanceEntries"][0]["task"]
+    fetched_task = fetched["provenance"][0]["task"]
     assert fetched_task["agentClientId"] == "my-agent-client-7"
 
     def check_row() -> None:
@@ -209,7 +209,7 @@ async def test_task_for_unknown_causer_is_unattributed(transactional_db, auth_he
     headers = {**auth_headers, "Rekuest-Task": provenance_token(tsk="task-3", rcb="ghost")}
     created = await create_model(headers)
 
-    entry = created["provenanceEntries"][0]
+    entry = created["provenance"][0]
     assert entry["task"] is not None
     assert entry["task"]["assignerSub"] == "ghost"
 
