@@ -1,12 +1,18 @@
 # CHANGELOG
 
 
+## v3.0.2 (2026-06-19)
+
+
 ## v3.0.1 (2026-06-18)
 
 ### Bug Fixes
 
 - Add authenitkate + tests
   ([`96aac7e`](https://github.com/arkitektio/koherent/commit/96aac7e46e3c13617e6681f95ce8d98fb71539ee))
+
+- Non distinct history events
+  ([`86e0997`](https://github.com/arkitektio/koherent/commit/86e0997b2b9225788181779d77d43ca8228f137e))
 
 
 ## v3.0.0 (2026-06-18)
