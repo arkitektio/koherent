@@ -33,7 +33,7 @@ def provenance_token(
 ) -> str:
     """Mint a signed EdDSA provenance token for the Rekuest-Task header.
 
-    Defaults describe a root assignation caused by the static "test" identity
+    Defaults describe a root task caused by the static "test" identity
     (sub "1") and executed by the static agent (sub "1", client_id "static").
     """
     now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())

@@ -16,7 +16,7 @@ class KoherentExtension(SchemaExtension):
     Reads the verified provenance token that AuthentikateExtension set on the
     request (AuthentikateExtension must run before this extension) and exposes
     it through a context variable, so history signals and helpers like
-    `koherent.utils.get_or_create_task` can attribute changes to the assignation.
+    `koherent.utils.get_or_create_task` can attribute changes to the task.
     """
 
     async def on_operation(self) -> AsyncIterator[None]:

@@ -4,25 +4,25 @@ from authentikate.models import Client
 
 
 class Task(models.Model):
-    """A verified provenance assignation under which changes were made.
+    """A verified provenance task under which changes were made.
 
-    One row per assignation, created lazily the first time a change happens
+    One row per task, created lazily the first time a change happens
     under it (see `koherent.utils.get_or_create_task`). The data comes from a
     signature-verified provenance token (`authentikate.provenance.ProvenanceToken`)
     that AuthentikateExtension attached to the request.
     """
 
-    assignation_id = models.CharField(
-        max_length=1000, unique=True, help_text="This assignation id (provenance tsk)."
+    task_id = models.CharField(
+        max_length=1000, unique=True, help_text="This task id (provenance tsk)."
     )
-    parent_assignation_id = models.CharField(
+    parent_task_id = models.CharField(
         max_length=1000,
         null=True,
         blank=True,
-        help_text="The immediate parent assignation id, if any.",
+        help_text="The immediate parent task id, if any.",
     )
-    root_assignation_id = models.CharField(
-        max_length=1000, help_text="The root assignation id of the whole causal tree."
+    root_task_id = models.CharField(
+        max_length=1000, help_text="The root task id of the whole causal tree."
     )
     assigner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -66,7 +66,7 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         """ A human readable representation of the task, useful in admin and debugging. """
-        return f"Task {self.assignation_id}"
+        return f"Task {self.task_id}"
 
 
 class ProvenanceEntryModel(models.Model):

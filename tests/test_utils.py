@@ -79,7 +79,7 @@ def test_no_organization_returns_none(auth_context) -> None:
 
 
 def test_token_fields_are_persisted(auth_context) -> None:
-    """The assignation tree, agent and args-hash claims land on the task row."""
+    """The task tree, agent and args-hash claims land on the task row."""
     provenance = provenance_obj(
         tsk="task-f",
         parent="parent-1",
@@ -93,8 +93,8 @@ def test_token_fields_are_persisted(auth_context) -> None:
     try:
         task = get_or_create_task()
         assert task is not None
-        assert task.parent_assignation_id == "parent-1"
-        assert task.root_assignation_id == "root-1"
+        assert task.parent_task_id == "parent-1"
+        assert task.root_task_id == "root-1"
         assert task.caller_sub == "1"
         assert task.agent_sub == "agent-7"
         assert task.agent_client_id == "agent-client"
@@ -104,8 +104,8 @@ def test_token_fields_are_persisted(auth_context) -> None:
         current_provenance.reset(reset)
 
 
-def test_cache_misses_on_new_assignation_id(auth_context) -> None:
-    """A token with a different assignation id bypasses the cached row."""
+def test_cache_misses_on_new_task_id(auth_context) -> None:
+    """A token with a different task id bypasses the cached row."""
     reset = current_provenance.set(provenance_obj(tsk="task-a", rcb="1"))
     try:
         first = get_or_create_task()
@@ -133,8 +133,8 @@ def test_concurrent_create_race_resolves_existing_row(auth_context, monkeypatch)
         # The concurrent request inserts the row between our existence check
         # and our insert attempt.
         real_create(
-            assignation_id="task-race",
-            root_assignation_id="task-race",
+            task_id="task-race",
+            root_task_id="task-race",
             assigner=user,
             assigner_sub="1",
             caller_sub="1",
@@ -151,7 +151,7 @@ def test_concurrent_create_race_resolves_existing_row(auth_context, monkeypatch)
     try:
         task = get_or_create_task()
         assert task is not None
-        assert task.assignation_id == "task-race"
+        assert task.task_id == "task-race"
         assert Task.objects.count() == 1
     finally:
         current_provenance.reset(reset)
@@ -163,8 +163,8 @@ def test_existing_task_row_skips_assigner_lookup(
     """The warm path costs one query and never resolves the assigner."""
     _, org = auth_context
     existing = Task.objects.create(
-        assignation_id="task-warm",
-        root_assignation_id="task-warm",
+        task_id="task-warm",
+        root_task_id="task-warm",
         assigner_sub="ghost",
         caller_sub="ghost",
         agent_sub="1",
@@ -188,8 +188,8 @@ def test_existing_task_row_survives_missing_organization(auth_context) -> None:
     """An existing row is returned even when the auth context lacks an org."""
     user, org = auth_context
     existing = Task.objects.create(
-        assignation_id="task-noorg",
-        root_assignation_id="task-noorg",
+        task_id="task-noorg",
+        root_task_id="task-noorg",
         assigner=user,
         assigner_sub="1",
         caller_sub="1",

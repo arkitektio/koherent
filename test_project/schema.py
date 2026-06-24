@@ -53,7 +53,7 @@ class Mutation:
         """ An example of a mutation that creates a model. """
         model = models.MyModel.objects.create(your_field=your_field)
         # This will create a new history entry (by sending a signal)
-        # bound to the current user and the assignation id
+        # bound to the current user and the task id
 
         return model
 
@@ -64,7 +64,7 @@ class Mutation:
         model.your_field = your_field
         model.save()
         # This will create a new history entry (by sending a signal)
-        # bound to the current user and the assignation id
+        # bound to the current user and the task id
 
         return model
 

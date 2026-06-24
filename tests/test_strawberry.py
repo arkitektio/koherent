@@ -20,7 +20,7 @@ mutation($yourField: String!) {
             kind
             effectiveChanges { field oldValue newValue }
             task {
-                assignationId
+                taskId
                 assignerSub
                 callerSub
                 agentSub
@@ -43,7 +43,7 @@ query($id: ID!) {
             kind
             effectiveChanges { field oldValue newValue }
             task {
-                assignationId
+                taskId
                 assignerSub
                 callerSub
                 agentSub
@@ -91,15 +91,15 @@ async def test_task_created(transactional_db, task_headers) -> None:
 
     entry = created["provenance"][0]
     assert entry["task"] is not None
-    assert entry["task"]["assignationId"] == "task-1"
+    assert entry["task"]["taskId"] == "task-1"
     assert entry["task"]["assignerSub"] == "1"
     assert entry["task"]["callerSub"] == "1"
     assert entry["task"]["agentSub"] == "1"
     assert entry["task"]["agentClientId"] == "static"
 
     def check_row() -> None:
-        task = Task.objects.get(assignation_id="task-1")
-        assert task.root_assignation_id == "task-1"
+        task = Task.objects.get(task_id="task-1")
+        assert task.root_task_id == "task-1"
         assert task.organization.slug == "static_org"
         assert task.assigner is not None
         assert task.assigner.sub == "1"
@@ -133,7 +133,7 @@ async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
     await create_model(headers)
 
     def check_row() -> None:
-        task = Task.objects.get(assignation_id="task-2")
+        task = Task.objects.get(task_id="task-2")
         assert task.assigner is not None
         assert task.assigner.sub == "2"
         assert task.assigner_sub == "2"
@@ -167,12 +167,12 @@ async def test_provenance_survives_create_then_query(transactional_db, task_head
     # And it is still linked to the task that the mutation recorded, including the
     # executing agent client id and the single-use token id.
     assert fetched_entry["task"] == created_entry["task"]
-    assert fetched_entry["task"]["assignationId"] == "task-1"
+    assert fetched_entry["task"]["taskId"] == "task-1"
     assert fetched_entry["task"]["callerSub"] == "1"
     assert fetched_entry["task"]["agentClientId"] == "static"
     assert fetched_entry["task"]["tokenId"]  # jti is persisted and non-empty
 
-    # The query path never spawned a second task row for the same assignation.
+    # The query path never spawned a second task row for the same task id.
     assert await sync_to_async(Task.objects.count)() == 1
 
 
@@ -197,7 +197,7 @@ async def test_agent_client_id_is_carried_through(transactional_db, auth_headers
     assert fetched_task["agentClientId"] == "my-agent-client-7"
 
     def check_row() -> None:
-        task = Task.objects.get(assignation_id="task-cid")
+        task = Task.objects.get(task_id="task-cid")
         assert task.agent_client_id == "my-agent-client-7"
 
     await sync_to_async(check_row)()
@@ -214,7 +214,7 @@ async def test_task_for_unknown_causer_is_unattributed(transactional_db, auth_he
     assert entry["task"]["assignerSub"] == "ghost"
 
     def check_row() -> None:
-        task = Task.objects.get(assignation_id="task-3")
+        task = Task.objects.get(task_id="task-3")
         assert task.assigner is None
         assert task.assigner_sub == "ghost"
 

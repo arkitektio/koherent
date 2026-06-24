@@ -13,7 +13,7 @@ traverses the history rows (and their task) of every instance.
 
 The exposed filter reads semantically and matches exactly, e.g.::
 
-    myModels(filters: { provenance: { assignationId: "task-a", kind: CREATE } })
+    myModels(filters: { provenance: { taskId: "task-a", kind: CREATE } })
 
 The reverse relation traversed is ``provenance_entries`` (the default
 ``related_name`` of ``ProvenanceField``); the mixin assumes the default.
@@ -40,10 +40,10 @@ class ProvenanceFilter:
     The task attributes are lifted up so consumers never traverse a nested task.
     """
 
-    @strawberry_django.filter_field(description="The assignation id the change ran under.")
-    def assignation_id(self, value: str, prefix: str) -> Q:
-        """Exact match against the task's assignation id."""
-        return Q(**{f"{prefix}task__assignation_id": value})
+    @strawberry_django.filter_field(description="The task id the change ran under.")
+    def task_id(self, value: str, prefix: str) -> Q:
+        """Exact match against the task's id."""
+        return Q(**{f"{prefix}task__task_id": value})
 
     @strawberry_django.filter_field(description="The executing agent client id.")
     def agent_client_id(self, value: str, prefix: str) -> Q:

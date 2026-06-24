@@ -55,43 +55,43 @@ async def filter_models(headers: dict[str, str], filters: dict) -> list[dict]:
 
 
 def _task_headers(auth_headers: dict[str, str], tsk: str) -> dict[str, str]:
-    """Auth headers carrying a signed provenance token for assignation ``tsk``."""
+    """Auth headers carrying a signed provenance token for task ``tsk``."""
     return {**auth_headers, "Rekuest-Task": provenance_token(tsk=tsk)}
 
 
 @pytest.mark.asyncio
-async def test_filter_by_assignation_id(transactional_db, auth_headers) -> None:
-    """Filtering by the assignation id returns only matching models."""
+async def test_filter_by_task_id(transactional_db, auth_headers) -> None:
+    """Filtering by the task id returns only matching models."""
     a_id = await create_model(_task_headers(auth_headers, "task-a"), "a")
     await create_model(_task_headers(auth_headers, "task-b"), "b")
 
     matched = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "task-a"}}
+        auth_headers, {"provenance": {"taskId": "task-a"}}
     )
     assert [m["id"] for m in matched] == [a_id]
 
     # A task that no model ran under yields nothing.
     none = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "task-zzz"}}
+        auth_headers, {"provenance": {"taskId": "task-zzz"}}
     )
     assert none == []
 
 
 @pytest.mark.asyncio
-async def test_filter_by_assignation_id_is_exact(transactional_db, auth_headers) -> None:
-    """The assignation id match is exact, not a substring search."""
+async def test_filter_by_task_id_is_exact(transactional_db, auth_headers) -> None:
+    """The task id match is exact, not a substring search."""
     a_id = await create_model(_task_headers(auth_headers, "alpha-task"), "a")
     await create_model(_task_headers(auth_headers, "beta-task"), "b")
 
     # The exact id matches.
     matched = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "alpha-task"}}
+        auth_headers, {"provenance": {"taskId": "alpha-task"}}
     )
     assert [m["id"] for m in matched] == [a_id]
 
     # A partial value does not.
     partial = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "alpha"}}
+        auth_headers, {"provenance": {"taskId": "alpha"}}
     )
     assert partial == []
 
@@ -142,7 +142,7 @@ async def test_filter_returns_each_model_once(transactional_db, auth_headers) ->
     await update_model(headers, a_id, "v3")  # now three entries, all under task-a
 
     matched = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "task-a"}}
+        auth_headers, {"provenance": {"taskId": "task-a"}}
     )
     assert [m["id"] for m in matched] == [a_id]
 
@@ -197,13 +197,13 @@ async def test_combined_predicates_match_same_entry(transactional_db, auth_heade
 
     # No single entry is both under task-a AND an UPDATE.
     cross = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "task-a", "kind": "UPDATE"}}
+        auth_headers, {"provenance": {"taskId": "task-a", "kind": "UPDATE"}}
     )
     assert cross == []
 
     # The UPDATE entry is the one under task-b.
     matched = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "task-b", "kind": "UPDATE"}}
+        auth_headers, {"provenance": {"taskId": "task-b", "kind": "UPDATE"}}
     )
     assert [m["id"] for m in matched] == [a_id]
 
@@ -220,6 +220,6 @@ async def test_filter_with_null_task_entries(transactional_db, auth_headers) -> 
 
     # Traversing into the (null) task excludes the untokened model, doesn't crash.
     by_task = await filter_models(
-        auth_headers, {"provenance": {"assignationId": "task-a"}}
+        auth_headers, {"provenance": {"taskId": "task-a"}}
     )
     assert [m["id"] for m in by_task] == [tokened_id]

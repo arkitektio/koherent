@@ -31,18 +31,18 @@ class ModelChange:
 @strawberry_django.type(
     TaskModel,
     pagination=True,
-    description="A verified provenance assignation under which changes were made.",
+    description="A verified provenance task under which changes were made.",
 )
 class Task:
-    """A verified provenance assignation under which changes were made."""
+    """A verified provenance task under which changes were made."""
 
     id: strawberry.ID
-    assignation_id: str = strawberry_django.field(description="This assignation id.")
-    parent_assignation_id: str | None = strawberry_django.field(
-        description="The immediate parent assignation id, if any."
+    task_id: str = strawberry_django.field(description="This task id.")
+    parent_task_id: str | None = strawberry_django.field(
+        description="The immediate parent task id, if any."
     )
-    root_assignation_id: str = strawberry_django.field(
-        description="The root assignation id of the whole causal tree."
+    root_task_id: str = strawberry_django.field(
+        description="The root task id of the whole causal tree."
     )
     assigner: User | None = strawberry_django.field(description="The root human causer.")
     assigner_sub: str = strawberry_django.field(description="The raw root human causer sub.")

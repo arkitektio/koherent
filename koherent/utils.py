@@ -32,12 +32,12 @@ def get_or_create_task() -> "Task | None":
         return None
 
     cached = current_task.get()
-    if cached is not None and cached.assignation_id == provenance.tsk:
+    if cached is not None and cached.task_id == provenance.tsk:
         return cached
 
-    # Warm path first: long-running assignations span many requests, so the row
+    # Warm path first: long-running tasks span many requests, so the row
     # usually exists and the assigner resolution query can be skipped.
-    task = Task.objects.filter(assignation_id=provenance.tsk).first()
+    task = Task.objects.filter(task_id=provenance.tsk).first()
 
     if task is None:
         organization = get_organization()
@@ -64,9 +64,9 @@ def get_or_create_task() -> "Task | None":
 
         try:
             task = Task.objects.create(
-                assignation_id=provenance.tsk,
-                parent_assignation_id=provenance.ptk,
-                root_assignation_id=provenance.rtk,
+                task_id=provenance.tsk,
+                parent_task_id=provenance.ptk,
+                root_task_id=provenance.rtk,
                 assigner=assigner,
                 assigner_sub=provenance.rcb,
                 caller_sub=provenance.sub,
@@ -79,9 +79,9 @@ def get_or_create_task() -> "Task | None":
                 organization=organization,
             )
         except IntegrityError:
-            # A concurrent request for the same assignation won the race; the row
+            # A concurrent request for the same task won the race; the row
             # exists now.
-            task = Task.objects.get(assignation_id=provenance.tsk)
+            task = Task.objects.get(task_id=provenance.tsk)
 
     current_task.set(task)
     return task

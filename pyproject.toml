@@ -9,7 +9,7 @@ dependencies = [
     "authentikate>=2.1.2",
     "django-simple-history>=3.8.0",
     "django>5",
-    "kante>=2.0.0",
+    "kante>=2.0.1",
 ]
 
 [tool.uv]

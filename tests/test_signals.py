@@ -56,7 +56,7 @@ def test_history_entry_is_attributed(request_context) -> None:
     assert entry.history_user == user
     assert entry.client == client
     assert entry.task is not None
-    assert entry.task.assignation_id == "task-s"
+    assert entry.task.task_id == "task-s"
 
 
 def test_updates_share_the_request_task(request_context) -> None:

@@ -17,7 +17,7 @@ Koherent adds **provenance-aware audit logging** to Django applications that exp
 [Strawberry](https://strawberry.rocks/) GraphQL API. It is a thin layer over
 [django-simple-history](https://django-simple-history.readthedocs.io/): every change to a
 tracked model is recorded as a history row, and each row is attributed to *who* changed it,
-*which client/app* they used, and — crucially — the verified **task** (assignation) it
+*which client/app* they used, and — crucially — the verified **task** it
 happened under.
 
 It answers questions like *"which automated run touched this record, on whose authority, and
@@ -63,7 +63,7 @@ that sits between them and turns an authenticated, context-carrying request into
 queryable audit trail.
 
 > **Note:** Koherent is built for the Arkitekt / Rekuest ecosystem. The "task" it tracks is a
-> Rekuest assignation, attested by a signed provenance token.
+> Rekuest task, attested by a signed provenance token.
 
 ### What gets tracked
 
@@ -73,20 +73,20 @@ Every history row (a `ProvenanceEntry`) carries:
 |---------------------|--------------------------------------------------------------------|
 | `user`              | The user who made the change (`history_user`).                     |
 | `client`            | The OAuth client / app that made the change, if any.               |
-| `task`              | The verified assignation the change ran under, if any.             |
+| `task`              | The verified task the change ran under, if any.             |
 | `kind`              | `CREATE` / `UPDATE` / `DELETE`.                                     |
 | `date`              | When the change happened.                                          |
 | `effective_changes` | The per-field old→new diff for that row.                           |
 
-The `task` is a `Task` row built once per assignation from the provenance token's claims
-(assignation id and its parent/root, the root human causer, the executing agent, the issuer,
+The `task` is a `Task` row built once per task from the provenance token's claims
+(task id and its parent/root, the root human causer, the executing agent, the issuer,
 the single-use token id, and an args hash).
 
-#### What is an assignation?
+#### What is a task?
 
-An assignation id (a.k.a. `correlation_id` / `context_id`) groups together every change made
+A task id (a.k.a. `correlation_id` / `context_id`) groups together every change made
 during one logical run. In Arkitekt, when a user calls an app through a Rekuest, all of that
-app's mutations carry the same assignation id — so you can later find, audit, or revert every
+app's mutations carry the same task id — so you can later find, audit, or revert every
 change a single run produced.
 
 ## How it fits together
@@ -128,14 +128,14 @@ from service.api import create_model, update_model  # generated GraphQL clients
 
 @register
 def do_some_transactions(name: str) -> Model:
-    """Every GraphQL call below is grouped under one assignation."""
+    """Every GraphQL call below is grouped under one task."""
     z = create_model(name=name)             # mutation #1
     f = update_model(id=z.id, name="renamed")  # mutation #2
     return f
 ```
 
 the agent receives an `Assign` message carrying an opaque, server-signed **provenance token**
-for that single assignation. While the function runs, rekuest-next holds that token in an
+for that single task. While the function runs, rekuest-next holds that token in an
 `AssignmentHelper` stored in a `contextvar` (`current_assignation_helper`), and a GraphQL link
 in its client chain — `ContextLink` — transparently stamps the token onto **every** outgoing
 operation:
@@ -146,14 +146,14 @@ and reused for the lifetime of that execution (Python's `contextvars` propagate 
 coroutine the function spawns); the application code does nothing special.
 
 On the server side, `AuthentikateExtension` verifies that `Rekuest-Task` token and Koherent's
-`get_or_create_task()` resolves it to a `Task` row, **deduplicating by the assignation id
+`get_or_create_task()` resolves it to a `Task` row, **deduplicating by the task id
 (`tsk`)**: the first mutation creates the row, every later mutation with the same token reuses
 it (a warm `Task.objects.filter(...).first()` lookup, cached in a contextvar per request). The
 result: every history row produced anywhere in that one `@register` execution links back to a
-single `Task`, and you can later query *"show me everything assignation X changed."*
+single `Task`, and you can later query *"show me everything task X changed."*
 
-> Long-running assignations span many separate HTTP requests over time; because the `Task` is
-> keyed by the token's assignation id rather than by request, they all still collapse onto the
+> Long-running tasks span many separate HTTP requests over time; because the `Task` is
+> keyed by the token's task id rather than by request, they all still collapse onto the
 > same row.
 
 
@@ -231,7 +231,7 @@ query {
       kind
       date
       user { sub }
-      task { assignationId agentClientId }
+      task { taskId agentClientId }
       effectiveChanges { field oldValue newValue }
     }
   }
@@ -248,11 +248,11 @@ type — no nested traversal required:
 
 ```graphql
 query {
-  myModels(filters: { provenance: { assignationId: "task-a", kind: CREATE } }) { id }
+  myModels(filters: { provenance: { taskId: "task-a", kind: CREATE } }) { id }
 }
 ```
 
-Available predicates: `assignationId`, `agentClientId`, `issuer`, `changedBy` (user sub),
+Available predicates: `taskId`, `agentClientId`, `issuer`, `changedBy` (user sub),
 `kind`, `changedSince`, and `changedBefore`.
 
 ## Interaction with `authentikate`
@@ -298,7 +298,7 @@ from koherent import get_current_provenance, get_current_task
 from koherent.strawberry import (
     KoherentExtension,
     ProvenanceEntry,      # the history-row GraphQL type
-    Task,                 # the assignation GraphQL type
+    Task,                 # the task GraphQL type
     ProvenanceFilter,     # the flat provenance filter
     ProvenanceFilterMixin,  # drop-in mixin adding a `provenance` filter
 )
