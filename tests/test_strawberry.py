@@ -18,7 +18,7 @@ mutation($yourField: String!) {
         provenance {
             id
             kind
-            effectiveChanges { field oldValue newValue }
+            effectiveChanges { field oldValue newValue oldValueJson newValueJson }
             task {
                 taskId
                 assignerSub
@@ -41,7 +41,7 @@ query($id: ID!) {
         provenance {
             id
             kind
-            effectiveChanges { field oldValue newValue }
+            effectiveChanges { field oldValue newValue oldValueJson newValueJson }
             task {
                 taskId
                 assignerSub

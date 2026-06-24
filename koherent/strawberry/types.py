@@ -2,6 +2,7 @@ from ..models import ProvenanceEntryModel, Task as TaskModel
 import strawberry_django
 import strawberry
 from strawberry.dataloader import DataLoader
+from strawberry.scalars import JSON
 from asgiref.sync import sync_to_async
 from authentikate.strawberry.types import Client, Organization, User
 from kante.types import Info
@@ -26,6 +27,12 @@ class ModelChange:
     field: str = strawberry.field(description="The field that was changed.")
     old_value: str | None = strawberry.field(description="The old value of the field.")
     new_value: str | None = strawberry.field(description="The new value of the field.")
+    old_value_json: JSON | None = strawberry.field(
+        description="The old value of the field, preserving its native JSON type."
+    )
+    new_value_json: JSON | None = strawberry.field(
+        description="The new value of the field, preserving its native JSON type."
+    )
 
 
 @strawberry_django.type(
@@ -88,6 +95,25 @@ def _build_prev_maps(rows: list[Any]) -> tuple[dict[Any, Any], dict[Any, Any]]:
     return rows_by_id, prev_by_id
 
 
+_JSON_NATIVE = (str, int, float, bool, type(None))
+
+
+def _to_json_safe(value: Any) -> Any:
+    """Coerce a raw history field value to something the JSON scalar can encode.
+
+    Native JSON types (and nested dict/list of them) pass through; anything else
+    (datetime, Decimal, UUID, model instances, ...) falls back to str(), since
+    strawberry's JSON scalar serializes through the stdlib JSON encoder.
+    """
+    if isinstance(value, _JSON_NATIVE):
+        return value
+    if isinstance(value, dict):
+        return {str(k): _to_json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_json_safe(v) for v in value]
+    return str(value)
+
+
 def _changes_for(new_record: Any, old_record: Any | None) -> list[ModelChange]:
     """Diff a history row against its previous record."""
     if old_record is None:
@@ -98,9 +124,12 @@ def _changes_for(new_record: Any, old_record: Any | None) -> list[ModelChange]:
             field=change.field,
             # diff_against yields the raw field values (ints, datetimes, fk ids,
             # ...); stringify them to match the str | None GraphQL fields, keeping
-            # None as null rather than the literal "None".
+            # None as null rather than the literal "None". The *_json fields keep
+            # the native value via _to_json_safe for type-faithful consumers.
             old_value=None if change.old is None else str(change.old),
             new_value=None if change.new is None else str(change.new),
+            old_value_json=None if change.old is None else _to_json_safe(change.old),
+            new_value_json=None if change.new is None else _to_json_safe(change.new),
         )
         for change in delta.changes
     ]
