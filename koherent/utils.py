@@ -17,8 +17,12 @@ def get_or_create_task() -> "Task | None":
     The row is cached in a context variable so repeated calls within one
     request (e.g. several history signals) hit the database at most once.
 
-    An existing row is returned as-is, even when the auth context carries no
-    organization; the organization is only required to create the row.
+    An existing row is returned as-is when the auth context carries no
+    organization; the organization is only required to create the row. When it
+    does carry one, a row belonging to a *different* organization is refused
+    (None): ``task_id`` is globally unique, so returning it would attach that
+    organization's task -- assigner, agent, args hash -- to this organization's
+    rows as ``created_through``, readable from here through the forward FK.
 
     Sync only: call from sync resolvers and signals.
     """
@@ -38,9 +42,9 @@ def get_or_create_task() -> "Task | None":
     # Warm path first: long-running tasks span many requests, so the row
     # usually exists and the assigner resolution query can be skipped.
     task = Task.objects.filter(task_id=provenance.tsk).first()
+    organization = get_organization()
 
     if task is None:
-        organization = get_organization()
         if organization is None:
             logger.warning(
                 "Cannot persist provenance task %s: no organization in the auth context",
@@ -82,6 +86,15 @@ def get_or_create_task() -> "Task | None":
             # A concurrent request for the same task won the race; the row
             # exists now.
             task = Task.objects.get(task_id=provenance.tsk)
+
+    if organization is not None and task.organization_id != organization.pk:
+        logger.warning(
+            "Refusing provenance task %s: it ran in organization %s, not the request's %s",
+            provenance.tsk,
+            task.organization_id,
+            organization.pk,
+        )
+        return None
 
     current_task.set(task)
     return task

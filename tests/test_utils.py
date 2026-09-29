@@ -207,3 +207,59 @@ def test_existing_task_row_survives_missing_organization(auth_context) -> None:
     finally:
         current_provenance.reset(reset_provenance)
         organization_var.reset(reset_org)
+
+
+def test_task_of_another_organization_is_refused(auth_context) -> None:
+    """A task that ran in another org is never attached to this org's rows."""
+    user, _ = auth_context
+    elsewhere = Organization.objects.create(slug="other_org")
+    Task.objects.create(
+        task_id="task-foreign",
+        root_task_id="task-foreign",
+        assigner=user,
+        assigner_sub="1",
+        caller_sub="1",
+        agent_sub="1",
+        agent_client_id="static",
+        issuer="rekuest",
+        token_id="jti-foreign",
+        organization=elsewhere,
+    )
+
+    reset = current_provenance.set(provenance_obj(tsk="task-foreign", rcb="1"))
+    try:
+        assert get_or_create_task() is None
+        assert current_task.get() is None
+    finally:
+        current_provenance.reset(reset)
+
+
+def test_lost_race_to_another_organization_is_refused(auth_context, monkeypatch) -> None:
+    """The race fallback applies the same organization check as the warm path."""
+    from django.db import IntegrityError
+
+    user, _ = auth_context
+    elsewhere = Organization.objects.create(slug="other_org")
+    real_create = Task.objects.create
+
+    def lost_race(**kwargs):
+        real_create(
+            task_id="task-race-foreign",
+            root_task_id="task-race-foreign",
+            assigner=user,
+            assigner_sub="1",
+            caller_sub="1",
+            agent_sub="1",
+            agent_client_id="static",
+            issuer="rekuest",
+            token_id="jti-race-foreign",
+            organization=elsewhere,
+        )
+        raise IntegrityError("duplicate key value violates unique constraint")
+
+    monkeypatch.setattr(Task.objects, "create", lost_race)
+    reset = current_provenance.set(provenance_obj(tsk="task-race-foreign", rcb="1"))
+    try:
+        assert get_or_create_task() is None
+    finally:
+        current_provenance.reset(reset)
