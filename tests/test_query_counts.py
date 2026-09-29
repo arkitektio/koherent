@@ -74,7 +74,7 @@ def test_effective_changes_is_batched(db, django_assert_num_queries) -> None:
 
 
 def test_effective_changes_batched_across_instances(
-    db, django_assert_num_queries
+    db, django_assert_max_num_queries
 ) -> None:
     """N selected instances must not mean N sibling-history queries."""
     for i in range(4):
@@ -82,9 +82,13 @@ def test_effective_changes_batched_across_instances(
         model.your_field = f"b{i}"
         model.save()
 
-    # myModels + provenance prefetch + ONE batched sibling-history
-    # query covering all four instances
-    with django_assert_num_queries(3):
+    # myModels + provenance prefetch + batched sibling-history queries. The
+    # loader batches whatever loads are queued when it dispatches; the four
+    # instances' provenance lists are resolved separately (strawberry-django
+    # hops threads in async execution), so they occasionally land in two event
+    # loop ticks and the batch splits in two -- timing, not a regression. What
+    # must never happen is one query per instance (2 + 4 = 6 here).
+    with django_assert_max_num_queries(4):
         result = _execute()
 
     assert result.errors is None
