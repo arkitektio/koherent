@@ -7,7 +7,7 @@ from .types import ProvenanceEntry, Task
 __all__ = [
     "KoherentExtension",
     "ProvenanceEntry",
-    "Task",
     "ProvenanceFilter",
     "ProvenanceFilterMixin",
+    "Task",
 ]

@@ -1,8 +1,10 @@
-from koherent.models import ProvenanceEntryModel
+from typing import Any
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from simple_history.models import HistoricalRecords, HistoricForeignKey
-from typing import Any
+
+from koherent.models import ProvenanceEntryModel
 
 
 def ProvenanceField(
@@ -30,7 +32,7 @@ def ProvenanceField(
 
 
 __all__ = [
-    "ProvenanceField",
-    "HistoricForeignKey",
     "GenericRelation",
+    "HistoricForeignKey",
+    "ProvenanceField",
 ]

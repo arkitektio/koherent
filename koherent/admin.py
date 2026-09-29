@@ -7,7 +7,6 @@ from koherent.models import Task
 class KoherentAdmin(SimpleHistoryAdmin):  # type: ignore
     """An admin class for Koherent models."""
 
-    pass
 
 
 @admin.register(Task)

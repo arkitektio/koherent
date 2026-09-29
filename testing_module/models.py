@@ -1,4 +1,5 @@
 from django.db import models
+
 from koherent.fields import ProvenanceField
 
 # Create your models here.
@@ -13,4 +14,4 @@ class MyModel(models.Model):
 
     class Meta:
         """ Model to test the Koherent extension. """
-        ordering = ["-id"]
+        ordering = ["-id"]  # noqa: RUF012 -- Django Meta, read not mutated

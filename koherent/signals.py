@@ -1,11 +1,11 @@
 from typing import Any
 
+from authentikate.vars import get_client, get_user
 from django.dispatch import receiver
 from simple_history.signals import (
     pre_create_historical_record,
 )
 
-from authentikate.vars import get_client, get_user
 from koherent.utils import get_or_create_task
 
 

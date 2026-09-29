@@ -1,10 +1,10 @@
 import logging
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
+from kante.context import HttpContext, WsContext
 from strawberry.extensions import SchemaExtension
 from strawberry.types.graphql import OperationType
 
-from kante.context import HttpContext, WsContext
 from koherent.vars import current_provenance, current_task
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class KoherentExtension(SchemaExtension):
                 reset_task = current_task.set(None)
 
         else:
-            raise ValueError(
+            raise ValueError(  # noqa: TRY004 -- callers and tests rely on ValueError
                 "Unknown context type. Cannot determine if it's WebSocket or HTTP."
             )
 

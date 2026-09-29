@@ -1,6 +1,6 @@
+from authentikate.models import Client
 from django.conf import settings
 from django.db import models
-from authentikate.models import Client
 
 
 class Task(models.Model):
@@ -88,10 +88,10 @@ class ProvenanceEntryModel(models.Model):
     class Meta:
         """ This is an abstract base model, not a real table. It provides common fields and behavior for all history models. """
         abstract = True
-        ordering = ["-history_date"]
+        ordering = ["-history_date"]  # noqa: RUF012 -- Django Meta, read not mutated
 
 
-from .signals import add_history_app  # noqa: E402
+from .signals import add_history_app
 
 __all__ = [
     "ProvenanceEntryModel",

@@ -1,14 +1,14 @@
-import strawberry_django
 import strawberry
-from testing_module import models
-from koherent.strawberry.extension import KoherentExtension
-from koherent.strawberry.types import ProvenanceEntry
-from koherent.strawberry.filters import ProvenanceFilterMixin
-from strawberry_django.filters import FilterLookup, filter_type
-from strawberry_django.optimizer import DjangoOptimizerExtension
+import strawberry_django
 from authentikate.strawberry.extension import AuthentikateExtension
 from kante.types import Info
+from strawberry_django.filters import FilterLookup, filter_type
+from strawberry_django.optimizer import DjangoOptimizerExtension
 
+from koherent.strawberry.extension import KoherentExtension
+from koherent.strawberry.filters import ProvenanceFilterMixin
+from koherent.strawberry.types import ProvenanceEntry
+from testing_module import models
 
 
 @filter_type(models.MyModel, description="Filter MyModel, including by provenance.")

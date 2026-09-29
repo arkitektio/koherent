@@ -2,6 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from authentikate.vars import get_organization, get_token, get_user
+
 from koherent.vars import current_provenance, current_task
 
 if TYPE_CHECKING:

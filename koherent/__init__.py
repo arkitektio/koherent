@@ -11,6 +11,6 @@ once the app registry is ready.
 from koherent.vars import get_current_provenance, get_current_task
 
 __all__ = [
-    "get_current_task",
     "get_current_provenance",
+    "get_current_task",
 ]
