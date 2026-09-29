@@ -26,5 +26,8 @@ jobs:
       - name: Check Ruff
         run: uvx ruff check .
 
-      - name: Check MyPy
-        run: uv run mypy .
+      # basedpyright against .basedpyright/baseline.json: the errors that existed
+      # when it was introduced are recorded there, so this fails only on new ones.
+      # Fix one, then refresh the baseline with `uv run basedpyright --writebaseline`.
+      - name: Check types (basedpyright)
+        run: uv run basedpyright

@@ -20,15 +20,15 @@ dev-dependencies = [
     "pytest-cov>=6.1.1",
     "pytest-django>=4.11.1",
     "python-semantic-release>=9.21.1",
+    "basedpyright>=1.21",
 ]
 
 
 
-[tool.mypy]
-exclude = ["venv/", "tests/", "examples/"]
-plugins = ["mypy_django_plugin.main","pydantic.mypy", "strawberry.ext.mypy_plugin"]
-ignore_missing_imports = true
-strict = true
+[tool.basedpyright]
+include = ["koherent"]
+exclude = ["**/__pycache__", "**/migrations"]
+typeCheckingMode = "standard"
 
 [tool.hatch.build.targets.sdist]
 include = ["koherent"]
@@ -39,9 +39,6 @@ include = ["koherent"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.django-stubs]
-django_settings_module = "test_project.settings"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "test_project.settings"
