@@ -100,3 +100,42 @@ def auth_headers() -> dict[str, str]:
 def task_headers(auth_headers: dict[str, str]) -> dict[str, str]:
     """Auth headers plus a provenance token caused by the requesting user."""
     return {**auth_headers, "Rekuest-Task": provenance_token()}
+
+
+class _TickingTimezone:
+    """``django.utils.timezone`` whose ``now()`` strictly increases on every call.
+
+    simple_history stamps each row with ``timezone.now()``. On Windows the clock
+    only ticks every ~15 ms, so consecutive saves in a test share a
+    ``history_date`` -- and a tie is a *different* case for prev-record pairing
+    (rows tied on a timestamp share their previous record, tested on purpose in
+    test_tied_history_dates_share_the_strictly_earlier_prev). Tests that save
+    several times mean distinct points in time; this makes them so everywhere.
+    """
+
+    def __init__(self) -> None:
+        from django.utils import timezone
+
+        self._timezone = timezone
+        self._last = None
+
+    def now(self) -> "datetime.datetime":
+        now = self._timezone.now()
+        if self._last is not None and now <= self._last:
+            now = self._last + datetime.timedelta(microseconds=1)
+        self._last = now
+        return now
+
+    def __getattr__(self, name: str):
+        return getattr(self._timezone, name)
+
+
+@pytest.fixture(autouse=True)
+def distinct_history_dates(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Give every history row its own timestamp, whatever the OS clock resolution.
+
+    Only simple_history's view of ``timezone`` is replaced, not Django's module.
+    """
+    import simple_history.models
+
+    monkeypatch.setattr(simple_history.models, "timezone", _TickingTimezone())
