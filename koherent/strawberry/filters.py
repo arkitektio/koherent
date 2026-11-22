@@ -55,7 +55,9 @@ class ProvenanceFilter:
         """Exact match against the task's issuer id."""
         return Q(**{f"{prefix}task__issuer": value})
 
-    @strawberry_django.filter_field(description="The sub of the user who made the change.")
+    @strawberry_django.filter_field(
+        description="The sub of the user who made the change."
+    )
     def changed_by(self, value: str, prefix: str) -> Q:
         """Exact match against the sub of the user who made the change."""
         return Q(**{f"{prefix}history_user__sub": value})

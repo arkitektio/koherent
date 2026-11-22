@@ -42,19 +42,23 @@ class Task(models.Model):
         max_length=1000, help_text="The executing agent user sub (act.sub claim)."
     )
     agent_client_id = models.CharField(
-        max_length=1000, help_text="The executing agent OAuth client id (act.cid claim)."
+        max_length=1000,
+        help_text="The executing agent OAuth client id (act.cid claim).",
     )
     issuer = models.CharField(
         max_length=1000, help_text="The provenance issuer id (iss claim)."
     )
     token_id = models.CharField(
-        max_length=1000, unique=True, help_text="The unique single-use token id (jti claim)."
+        max_length=1000,
+        unique=True,
+        help_text="The unique single-use token id (jti claim).",
     )
     args_hash = models.CharField(
         max_length=1000, help_text="The SHA-256 of the canonicalized args (ahs claim)."
     )
     args_hash_algorithm = models.CharField(
-        max_length=200, help_text="The args canonicalization algorithm/version (aha claim)."
+        max_length=200,
+        help_text="The args canonicalization algorithm/version (aha claim).",
     )
     organization = models.ForeignKey(
         "authentikate.Organization",
@@ -65,7 +69,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        """ A human readable representation of the task, useful in admin and debugging. """
+        """A human readable representation of the task, useful in admin and debugging."""
         return f"Task {self.task_id}"
 
 
@@ -86,7 +90,8 @@ class ProvenanceEntryModel(models.Model):
     )
 
     class Meta:
-        """ This is an abstract base model, not a real table. It provides common fields and behavior for all history models. """
+        """This is an abstract base model, not a real table. It provides common fields and behavior for all history models."""
+
         abstract = True
         ordering = ["-history_date"]  # noqa: RUF012 -- Django Meta, read not mutated
 

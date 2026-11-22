@@ -129,7 +129,7 @@ from service.api import create_model, update_model  # generated GraphQL clients
 @register
 def do_some_transactions(name: str) -> Model:
     """Every GraphQL call below is grouped under one task."""
-    z = create_model(name=name)             # mutation #1
+    z = create_model(name=name)  # mutation #1
     f = update_model(id=z.id, name="renamed")  # mutation #2
     return f
 ```
@@ -297,9 +297,9 @@ from koherent.models import Task, ProvenanceEntryModel
 from koherent import get_current_provenance, get_current_task
 from koherent.strawberry import (
     KoherentExtension,
-    ProvenanceEntry,      # the history-row GraphQL type
-    Task,                 # the task GraphQL type
-    ProvenanceFilter,     # the flat provenance filter
+    ProvenanceEntry,  # the history-row GraphQL type
+    Task,  # the task GraphQL type
+    ProvenanceFilter,  # the flat provenance filter
     ProvenanceFilterMixin,  # drop-in mixin adding a `provenance` filter
 )
 ```

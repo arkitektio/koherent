@@ -18,7 +18,8 @@ from ..models import Task as TaskModel
 
 @strawberry.enum(description="The type of change that was made.")
 class HistoryKind(str, Enum):
-    """ The type of change that was made. """
+    """The type of change that was made."""
+
     CREATE = "+"
     UPDATE = "~"
     DELETE = "-"
@@ -27,6 +28,7 @@ class HistoryKind(str, Enum):
 @strawberry.type(description="A change made to a model.")
 class ModelChange:
     """The change made to a model."""
+
     field: str = strawberry.field(description="The field that was changed.")
     old_value: str | None = strawberry.field(description="The old value of the field.")
     new_value: str | None = strawberry.field(description="The new value of the field.")
@@ -54,18 +56,34 @@ class Task:
     root_task_id: str = strawberry_django.field(
         description="The root task id of the whole causal tree."
     )
-    assigner: User | None = strawberry_django.field(description="The root human causer.")
-    assigner_sub: str = strawberry_django.field(description="The raw root human causer sub.")
-    caller_sub: str = strawberry_django.field(description="The immediate causer of this hop.")
-    agent_sub: str = strawberry_django.field(description="The executing agent user sub.")
-    agent_client_id: str = strawberry_django.field(description="The executing agent client id.")
+    assigner: User | None = strawberry_django.field(
+        description="The root human causer."
+    )
+    assigner_sub: str = strawberry_django.field(
+        description="The raw root human causer sub."
+    )
+    caller_sub: str = strawberry_django.field(
+        description="The immediate causer of this hop."
+    )
+    agent_sub: str = strawberry_django.field(
+        description="The executing agent user sub."
+    )
+    agent_client_id: str = strawberry_django.field(
+        description="The executing agent client id."
+    )
     issuer: str = strawberry_django.field(description="The provenance issuer id.")
-    token_id: str = strawberry_django.field(description="The unique single-use token id.")
-    args_hash: str = strawberry_django.field(description="The SHA-256 of the canonicalized args.")
+    token_id: str = strawberry_django.field(
+        description="The unique single-use token id."
+    )
+    args_hash: str = strawberry_django.field(
+        description="The SHA-256 of the canonicalized args."
+    )
     args_hash_algorithm: str = strawberry_django.field(
         description="The args canonicalization algorithm/version."
     )
-    organization: Organization = strawberry_django.field(description="The organization the task ran in.")
+    organization: Organization = strawberry_django.field(
+        description="The organization the task ran in."
+    )
     created_at: datetime.datetime
 
 
@@ -149,9 +167,9 @@ def _fetch_effective_changes(
     Sync only: diff_against may itself query for m2m-tracked fields, so the
     diffing must stay inside the loader's sync_to_async hop.
     """
-    rows = model._default_manager.filter(
-        history_relation_id__in=relation_ids
-    ).order_by("history_relation_id", "history_date", "history_id")
+    rows = model._default_manager.filter(history_relation_id__in=relation_ids).order_by(
+        "history_relation_id", "history_date", "history_id"
+    )
 
     grouped: dict[Any, list[Any]] = defaultdict(list)
     for row in rows:
@@ -197,9 +215,12 @@ def _sibling_changes_loader(info: Info, model: type[models.Model]) -> DataLoader
     return loaders[model]
 
 
-@strawberry_django.type(ProvenanceEntryModel, pagination=True, description="A provenance event for a model.")
+@strawberry_django.type(
+    ProvenanceEntryModel, pagination=True, description="A provenance event for a model."
+)
 class ProvenanceEntry:
-    """ A change made to a model."""
+    """A change made to a model."""
+
     client: Client | None
     task: Task | None = strawberry_django.field(
         description="The task during which the change occurred, if any."

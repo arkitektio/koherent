@@ -8,10 +8,10 @@ django_assert_num_queries able to capture the queries.
 
 import strawberry
 from asgiref.sync import async_to_sync
+from kante.context import HttpContext, UniversalRequest
 from strawberry.http.temporal_response import TemporalResponse
 from strawberry_django.optimizer import DjangoOptimizerExtension
 
-from kante.context import HttpContext, UniversalRequest
 from test_project.schema import Query
 from testing_module.models import MyModel
 

@@ -3,11 +3,11 @@
 from types import SimpleNamespace
 
 import pytest
+from authentikate.provenance import ProvenanceToken
+from kante.context import HttpContext, UniversalRequest, WsContext
 from strawberry.http.temporal_response import TemporalResponse
 from strawberry.types.graphql import OperationType
 
-from authentikate.provenance import ProvenanceToken
-from kante.context import HttpContext, UniversalRequest, WsContext
 from koherent.strawberry.extension import KoherentExtension
 from koherent.vars import current_provenance, current_task
 from tests.conftest import provenance_obj

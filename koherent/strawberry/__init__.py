@@ -1,4 +1,4 @@
-""" The extensions for Koherent."""
+"""The extensions for Koherent."""
 
 from .extension import KoherentExtension
 from .filters import ProvenanceFilter, ProvenanceFilterMixin

@@ -1,10 +1,10 @@
 """Unit tests for koherent.utils.get_or_create_task."""
 
 import pytest
-
 from authentikate.base_models import StaticToken
 from authentikate.models import Organization, User
 from authentikate.vars import organization_var, token_var, user_var
+
 from koherent.models import Task
 from koherent.utils import get_or_create_task
 from koherent.vars import current_provenance, current_task
@@ -122,7 +122,9 @@ def test_cache_misses_on_new_task_id(auth_context) -> None:
         current_provenance.reset(reset)
 
 
-def test_concurrent_create_race_resolves_existing_row(auth_context, monkeypatch) -> None:
+def test_concurrent_create_race_resolves_existing_row(
+    auth_context, monkeypatch
+) -> None:
     """When a concurrent request wins the insert race, the existing row is used."""
     from django.db import IntegrityError
 
@@ -234,7 +236,9 @@ def test_task_of_another_organization_is_refused(auth_context) -> None:
         current_provenance.reset(reset)
 
 
-def test_lost_race_to_another_organization_is_refused(auth_context, monkeypatch) -> None:
+def test_lost_race_to_another_organization_is_refused(
+    auth_context, monkeypatch
+) -> None:
     """The race fallback applies the same organization check as the warm path."""
     from django.db import IntegrityError
 

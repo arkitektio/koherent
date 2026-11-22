@@ -6,8 +6,8 @@ from typing import Any
 
 from asgiref.sync import async_to_sync
 from django.utils import timezone
-
 from kante.context import UniversalRequest
+
 from koherent.strawberry.types import (
     _build_prev_maps,
     _changes_for,
@@ -216,7 +216,10 @@ def test_changes_for_json_fields_preserve_native_types() -> None:
     assert (changes["count"].old_value_json, changes["count"].new_value_json) == (1, 2)
     assert changes["flag"].old_value_json is False
     assert changes["flag"].new_value_json is True
-    assert (changes["note"].old_value_json, changes["note"].new_value_json) == (None, "hi")
+    assert (changes["note"].old_value_json, changes["note"].new_value_json) == (
+        None,
+        "hi",
+    )
     assert changes["payload"].new_value_json == {"k": 1}
     # datetime is not JSON-native, so it falls back to its string form.
     assert changes["created_at"].new_value_json == str(when)

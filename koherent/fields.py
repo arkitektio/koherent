@@ -36,7 +36,10 @@ class ProvenanceRecords(HistoricalRecords):
             # A new list per model: the history model keeps a reference to it
             # (``_history_excluded_fields``) to refill the excluded columns from the live row.
             given = self.given_excluded_fields
-            self.excluded_fields = [*given, *(name for name in excluded if name not in given)]
+            self.excluded_fields = [
+                *given,
+                *(name for name in excluded if name not in given),
+            ]
         super().finalize(sender, **kwargs)
 
 

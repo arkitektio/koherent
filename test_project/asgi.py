@@ -20,7 +20,6 @@ django_asgi_app = get_asgi_application()
 from .schema import schema  # noqa
 
 
-
 application = router(
     schema,
     django_asgi_app,

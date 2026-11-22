@@ -61,9 +61,7 @@ def get_or_create_task() -> "Task | None":
         else:
             assigner = (
                 get_user_model()
-                .objects.filter(
-                    sub=provenance.rcb, iss=token.iss if token else None
-                )
+                .objects.filter(sub=provenance.rcb, iss=token.iss if token else None)
                 .first()
             )
 

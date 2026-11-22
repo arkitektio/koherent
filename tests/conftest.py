@@ -2,10 +2,9 @@ import datetime
 import uuid
 
 import pytest
+from authentikate.provenance import CANONICALIZATION_VERSION, ProvenanceToken
 from joserfc import jwt
 from joserfc.jwk import OKPKey
-
-from authentikate.provenance import CANONICALIZATION_VERSION, ProvenanceToken
 
 # The Ed25519 private key whose public half is published in test_project.settings
 # (PROVENANCE_TEST_PUBLIC_JWK). Provenance tokens carry no static-token bypass, so
@@ -36,7 +35,7 @@ def provenance_token(
     Defaults describe a root task caused by the static "test" identity
     (sub "1") and executed by the static agent (sub "1", client_id "static").
     """
-    now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+    now = int(datetime.datetime.now(datetime.UTC).timestamp())
     claims = {
         "iss": "rekuest",
         "aud": [audience],
@@ -71,7 +70,7 @@ def provenance_obj(
     args_hash: str = "deadbeef",
 ) -> ProvenanceToken:
     """Build a decoded ProvenanceToken for unit tests that set the context var."""
-    now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+    now = int(datetime.datetime.now(datetime.UTC).timestamp())
     return ProvenanceToken(
         iss="rekuest",
         aud=["koherent"],

@@ -1,10 +1,10 @@
 """Unit tests for the pre_create_historical_record signal handler."""
 
 import pytest
-
 from authentikate.base_models import StaticToken
 from authentikate.models import Client, Organization, User
 from authentikate.vars import client_var, organization_var, token_var, user_var
+
 from koherent.vars import current_provenance, current_task
 from testing_module.models import MyModel
 from tests.conftest import provenance_obj

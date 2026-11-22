@@ -12,24 +12,6 @@ dependencies = [
     "kante>=2.0.1",
 ]
 
-[tool.uv]
-dev-dependencies = [
-    "cryptography>=44.0.3",
-    "daphne>=4.1.2",
-    "pytest-asyncio>=0.26.0",
-    "pytest-cov>=6.1.1",
-    "pytest-django>=4.11.1",
-    "python-semantic-release>=9.21.1",
-    "basedpyright>=1.21",
-]
-
-
-
-[tool.basedpyright]
-include = ["koherent"]
-exclude = ["**/__pycache__", "**/migrations"]
-typeCheckingMode = "standard"
-
 [tool.hatch.build.targets.sdist]
 include = ["koherent"]
 
@@ -43,48 +25,6 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "test_project.settings"
 
-[tool.ruff]
-# Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
-# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
-# McCabe complexity (`C901`) by default.
-extend-select = ["ANN", "D1", "UP"]
-extend-ignore = [ "ANN002", "ANN003", "D100", "ANN401", "UP037", "UP038", "UP042", "UP040", "UP046", "UP047", "UP049"]
-
-# Exclude a variety of commonly ignored directories.
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "tests",
-    "examples",
-    "**/migrations",
-]
-
-# Same as Black.
-line-length = 300
-
-
-# Assume Python 3.12.
-target-version = "py312"
-
-
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 upload_to_pypi = true
@@ -92,4 +32,14 @@ branch = "main"
 build_command = "uv build"
 
 
-
+[dependency-groups]
+dev = [
+    "cryptography>=44.0.3",
+    "daphne>=4.1.2",
+    "pytest-asyncio>=0.26.0",
+    "pytest-cov>=6.1.1",
+    "pytest-django>=4.11.1",
+    "python-semantic-release>=9.21.1",
+    "ruff==0.17.6",
+    "basedpyright==1.40.2",
+]

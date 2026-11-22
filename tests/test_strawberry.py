@@ -2,14 +2,12 @@
 
 import pytest
 from asgiref.sync import sync_to_async
-
-from test_project.asgi import application
+from authentikate.models import Membership, Organization, User
 from kante.testing import GraphQLHttpTestClient
 
-from authentikate.models import Membership, Organization, User
 from koherent.models import Task
+from test_project.asgi import application
 from tests.conftest import provenance_token
-
 
 CREATE_MODEL = """
 mutation($yourField: String!) {
@@ -142,7 +140,9 @@ async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_provenance_survives_create_then_query(transactional_db, task_headers) -> None:
+async def test_provenance_survives_create_then_query(
+    transactional_db, task_headers
+) -> None:
     """A model created under a task exposes the same provenance entry when read back.
 
     Full round trip: the mutation creates the model and its CREATE entry, then a
@@ -177,7 +177,9 @@ async def test_provenance_survives_create_then_query(transactional_db, task_head
 
 
 @pytest.mark.asyncio
-async def test_agent_client_id_is_carried_through(transactional_db, auth_headers) -> None:
+async def test_agent_client_id_is_carried_through(
+    transactional_db, auth_headers
+) -> None:
     """The token's agent client id (act.cid) is persisted and read back verbatim.
 
     Uses a distinctive client id so the value can only come from the token, proving
@@ -204,9 +206,14 @@ async def test_agent_client_id_is_carried_through(transactional_db, auth_headers
 
 
 @pytest.mark.asyncio
-async def test_task_for_unknown_causer_is_unattributed(transactional_db, auth_headers) -> None:
+async def test_task_for_unknown_causer_is_unattributed(
+    transactional_db, auth_headers
+) -> None:
     """An rcb with no local user row still records the task with a null assigner."""
-    headers = {**auth_headers, "Rekuest-Task": provenance_token(tsk="task-3", rcb="ghost")}
+    headers = {
+        **auth_headers,
+        "Rekuest-Task": provenance_token(tsk="task-3", rcb="ghost"),
+    }
     created = await create_model(headers)
 
     entry = created["provenance"][0]

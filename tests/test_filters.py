@@ -6,12 +6,10 @@ filter a model by the provenance of its history, matching exactly.
 """
 
 import pytest
-
-from test_project.asgi import application
 from kante.testing import GraphQLHttpTestClient
 
+from test_project.asgi import application
 from tests.conftest import provenance_token
-
 
 CREATE_MODEL = """
 mutation($yourField: String!) {
@@ -65,15 +63,11 @@ async def test_filter_by_task_id(transactional_db, auth_headers) -> None:
     a_id = await create_model(_task_headers(auth_headers, "task-a"), "a")
     await create_model(_task_headers(auth_headers, "task-b"), "b")
 
-    matched = await filter_models(
-        auth_headers, {"provenance": {"taskId": "task-a"}}
-    )
+    matched = await filter_models(auth_headers, {"provenance": {"taskId": "task-a"}})
     assert [m["id"] for m in matched] == [a_id]
 
     # A task that no model ran under yields nothing.
-    none = await filter_models(
-        auth_headers, {"provenance": {"taskId": "task-zzz"}}
-    )
+    none = await filter_models(auth_headers, {"provenance": {"taskId": "task-zzz"}})
     assert none == []
 
 
@@ -90,9 +84,7 @@ async def test_filter_by_task_id_is_exact(transactional_db, auth_headers) -> Non
     assert [m["id"] for m in matched] == [a_id]
 
     # A partial value does not.
-    partial = await filter_models(
-        auth_headers, {"provenance": {"taskId": "alpha"}}
-    )
+    partial = await filter_models(auth_headers, {"provenance": {"taskId": "alpha"}})
     assert partial == []
 
 
@@ -141,9 +133,7 @@ async def test_filter_returns_each_model_once(transactional_db, auth_headers) ->
     await update_model(headers, a_id, "v2")
     await update_model(headers, a_id, "v3")  # now three entries, all under task-a
 
-    matched = await filter_models(
-        auth_headers, {"provenance": {"taskId": "task-a"}}
-    )
+    matched = await filter_models(auth_headers, {"provenance": {"taskId": "task-a"}})
     assert [m["id"] for m in matched] == [a_id]
 
 
@@ -172,7 +162,9 @@ async def test_filter_by_issuer(transactional_db, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_filter_by_changed_since_and_before(transactional_db, auth_headers) -> None:
+async def test_filter_by_changed_since_and_before(
+    transactional_db, auth_headers
+) -> None:
     """The date predicates bound the change date in the right direction."""
     a_id = await create_model(auth_headers, "a")
 
@@ -180,20 +172,33 @@ async def test_filter_by_changed_since_and_before(transactional_db, auth_headers
     far_past = "2000-01-01T00:00:00+00:00"
 
     # Nothing changed after the far future.
-    assert await filter_models(auth_headers, {"provenance": {"changedSince": far_future}}) == []
+    assert (
+        await filter_models(auth_headers, {"provenance": {"changedSince": far_future}})
+        == []
+    )
     # Everything changed before the far future.
-    before = await filter_models(auth_headers, {"provenance": {"changedBefore": far_future}})
+    before = await filter_models(
+        auth_headers, {"provenance": {"changedBefore": far_future}}
+    )
     assert [m["id"] for m in before] == [a_id]
     # Everything changed after the far past.
-    since = await filter_models(auth_headers, {"provenance": {"changedSince": far_past}})
+    since = await filter_models(
+        auth_headers, {"provenance": {"changedSince": far_past}}
+    )
     assert [m["id"] for m in since] == [a_id]
 
 
 @pytest.mark.asyncio
-async def test_combined_predicates_match_same_entry(transactional_db, auth_headers) -> None:
+async def test_combined_predicates_match_same_entry(
+    transactional_db, auth_headers
+) -> None:
     """Predicates in one provenance filter must be satisfied by the same entry."""
-    a_id = await create_model(_task_headers(auth_headers, "task-a"), "a")  # CREATE under task-a
-    await update_model(_task_headers(auth_headers, "task-b"), a_id, "b")  # UPDATE under task-b
+    a_id = await create_model(
+        _task_headers(auth_headers, "task-a"), "a"
+    )  # CREATE under task-a
+    await update_model(
+        _task_headers(auth_headers, "task-b"), a_id, "b"
+    )  # UPDATE under task-b
 
     # No single entry is both under task-a AND an UPDATE.
     cross = await filter_models(
@@ -219,7 +224,5 @@ async def test_filter_with_null_task_entries(transactional_db, auth_headers) -> 
     assert {m["id"] for m in created} == {untokened_id, tokened_id}
 
     # Traversing into the (null) task excludes the untokened model, doesn't crash.
-    by_task = await filter_models(
-        auth_headers, {"provenance": {"taskId": "task-a"}}
-    )
+    by_task = await filter_models(auth_headers, {"provenance": {"taskId": "task-a"}})
     assert [m["id"] for m in by_task] == [tokened_id]
