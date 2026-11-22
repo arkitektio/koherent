@@ -117,6 +117,434 @@
                     "lineCount": 1
                 }
             }
+        ],
+        "./test_project/schema.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 30,
+                    "endColumn": 37,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 31,
+                    "endColumn": 38,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 31,
+                    "endColumn": 38,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./testing_module/apps.py": [
+            {
+                "code": "reportAssignmentType",
+                "range": {
+                    "startColumn": 25,
+                    "endColumn": 56,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/conftest.py": [
+            {
+                "code": "reportArgumentType",
+                "range": {
+                    "startColumn": 41,
+                    "endColumn": 69,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportArgumentType",
+                "range": {
+                    "startColumn": 12,
+                    "endColumn": 48,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportArgumentType",
+                "range": {
+                    "startColumn": 12,
+                    "endColumn": 15,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportArgumentType",
+                "range": {
+                    "startColumn": 12,
+                    "endColumn": 22,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/test_excluded_fields.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 22,
+                    "endColumn": 40,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 24,
+                    "endColumn": 31,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 24,
+                    "endColumn": 31,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/test_extension.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 28,
+                    "endColumn": 5,
+                    "lineCount": 3
+                }
+            },
+            {
+                "code": "reportArgumentType",
+                "range": {
+                    "startColumn": 17,
+                    "endColumn": 25,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/test_query_counts.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 24,
+                    "endColumn": 31,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/test_sibling_history.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 25,
+                    "endColumn": 43,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 22,
+                    "endColumn": 40,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 24,
+                    "endColumn": 31,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/test_signals.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 23,
+                    "endColumn": 30,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/test_strawberry.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 36,
+                    "endColumn": 43,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 36,
+                    "endColumn": 43,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 30,
+                    "endColumn": 37,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 19,
+                    "endColumn": 26,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 36,
+                    "endColumn": 43,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./tests/test_utils.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 23,
+                    "endColumn": 30,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 16,
+                    "endColumn": 23,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 23,
+                    "endColumn": 30,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 29,
+                    "endColumn": 36,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 20,
+                    "endColumn": 27,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 29,
+                    "endColumn": 36,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 9,
+                    "endColumn": 16,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 29,
+                    "endColumn": 36,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 23,
+                    "endColumn": 30,
+                    "lineCount": 1
+                }
+            },
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 29,
+                    "endColumn": 36,
+                    "lineCount": 1
+                }
+            }
         ]
     }
 }
