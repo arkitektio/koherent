@@ -69,7 +69,9 @@ async def get_model(headers: dict[str, str], model_id: str) -> dict:
 
 
 @pytest.mark.asyncio
-async def test_create_without_task(transactional_db, auth_headers) -> None:
+async def test_create_without_task(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """Without a task header nothing is persisted and the entry has no task."""
     created = await create_model(auth_headers)
 
@@ -83,7 +85,9 @@ async def test_create_without_task(transactional_db, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_task_created(transactional_db, task_headers) -> None:
+async def test_task_created(
+    transactional_db: None, task_headers: dict[str, str]
+) -> None:
     """A verified provenance token creates one task row linked from the history entry."""
     created = await create_model(task_headers)
 
@@ -106,7 +110,9 @@ async def test_task_created(transactional_db, task_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_task_reused(transactional_db, task_headers) -> None:
+async def test_task_reused(
+    transactional_db: None, task_headers: dict[str, str]
+) -> None:
     """Several changes during the same task share a single task row."""
     await create_model(task_headers, "first")
     await create_model(task_headers, "second")
@@ -115,7 +121,9 @@ async def test_task_reused(transactional_db, task_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
+async def test_cross_user_assigner(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """A root human causer (rcb) other than the agent resolves to that user's row."""
 
     def seed() -> None:
@@ -141,7 +149,7 @@ async def test_cross_user_assigner(transactional_db, auth_headers) -> None:
 
 @pytest.mark.asyncio
 async def test_provenance_survives_create_then_query(
-    transactional_db, task_headers
+    transactional_db: None, task_headers: dict[str, str]
 ) -> None:
     """A model created under a task exposes the same provenance entry when read back.
 
@@ -178,7 +186,7 @@ async def test_provenance_survives_create_then_query(
 
 @pytest.mark.asyncio
 async def test_agent_client_id_is_carried_through(
-    transactional_db, auth_headers
+    transactional_db: None, auth_headers: dict[str, str]
 ) -> None:
     """The token's agent client id (act.cid) is persisted and read back verbatim.
 
@@ -207,7 +215,7 @@ async def test_agent_client_id_is_carried_through(
 
 @pytest.mark.asyncio
 async def test_task_for_unknown_causer_is_unattributed(
-    transactional_db, auth_headers
+    transactional_db: None, auth_headers: dict[str, str]
 ) -> None:
     """An rcb with no local user row still records the task with a null assigner."""
     headers = {

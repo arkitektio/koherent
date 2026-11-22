@@ -1,9 +1,13 @@
 """Unit tests for koherent.utils.get_or_create_task."""
 
+from collections.abc import Iterator
+from typing import Any, NoReturn
+
 import pytest
 from authentikate.base_models import StaticToken
 from authentikate.models import Organization, User
 from authentikate.vars import organization_var, token_var, user_var
+from pytest_django import DjangoAssertNumQueries
 
 from koherent.models import Task
 from koherent.utils import get_or_create_task
@@ -12,7 +16,7 @@ from tests.conftest import provenance_obj
 
 
 @pytest.fixture
-def auth_context(db):
+def auth_context(db: None) -> Iterator[tuple[User, Organization]]:
     """A request-like auth context for the static "test" identity."""
     user = User.objects.create(sub="1", iss="static_issuer", username="static_issuer_1")
     org = Organization.objects.create(slug="static_org")
@@ -31,13 +35,13 @@ def auth_context(db):
         var.reset(reset)
 
 
-def test_no_provenance_returns_none(auth_context) -> None:
+def test_no_provenance_returns_none(auth_context: tuple[User, Organization]) -> None:
     """Without a current provenance token there is nothing to persist."""
     assert get_or_create_task() is None
     assert Task.objects.count() == 0
 
 
-def test_assigner_is_request_user(auth_context) -> None:
+def test_assigner_is_request_user(auth_context: tuple[User, Organization]) -> None:
     """When the root causer (rcb) matches the token sub, the request user is the assigner."""
     user, org = auth_context
     reset = current_provenance.set(provenance_obj(tsk="task-x", rcb="1"))
@@ -54,7 +58,9 @@ def test_assigner_is_request_user(auth_context) -> None:
         current_provenance.reset(reset)
 
 
-def test_unresolvable_assigner_keeps_raw_sub(auth_context) -> None:
+def test_unresolvable_assigner_keeps_raw_sub(
+    auth_context: tuple[User, Organization],
+) -> None:
     """An rcb with no local user row falls back to null + raw sub."""
     reset = current_provenance.set(provenance_obj(tsk="task-y", rcb="ghost"))
     try:
@@ -66,7 +72,7 @@ def test_unresolvable_assigner_keeps_raw_sub(auth_context) -> None:
         current_provenance.reset(reset)
 
 
-def test_no_organization_returns_none(auth_context) -> None:
+def test_no_organization_returns_none(auth_context: tuple[User, Organization]) -> None:
     """Without an organization in the auth context nothing is persisted."""
     reset_org = organization_var.set(None)
     reset_provenance = current_provenance.set(provenance_obj(tsk="task-z", rcb="1"))
@@ -78,7 +84,7 @@ def test_no_organization_returns_none(auth_context) -> None:
         organization_var.reset(reset_org)
 
 
-def test_token_fields_are_persisted(auth_context) -> None:
+def test_token_fields_are_persisted(auth_context: tuple[User, Organization]) -> None:
     """The task tree, agent and args-hash claims land on the task row."""
     provenance = provenance_obj(
         tsk="task-f",
@@ -104,7 +110,7 @@ def test_token_fields_are_persisted(auth_context) -> None:
         current_provenance.reset(reset)
 
 
-def test_cache_misses_on_new_task_id(auth_context) -> None:
+def test_cache_misses_on_new_task_id(auth_context: tuple[User, Organization]) -> None:
     """A token with a different task id bypasses the cached row."""
     reset = current_provenance.set(provenance_obj(tsk="task-a", rcb="1"))
     try:
@@ -123,7 +129,7 @@ def test_cache_misses_on_new_task_id(auth_context) -> None:
 
 
 def test_concurrent_create_race_resolves_existing_row(
-    auth_context, monkeypatch
+    auth_context: tuple[User, Organization], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """When a concurrent request wins the insert race, the existing row is used."""
     from django.db import IntegrityError
@@ -131,7 +137,7 @@ def test_concurrent_create_race_resolves_existing_row(
     user, org = auth_context
     real_create = Task.objects.create
 
-    def lost_race(**kwargs):
+    def lost_race(**kwargs: Any) -> NoReturn:
         # The concurrent request inserts the row between our existence check
         # and our insert attempt.
         real_create(
@@ -160,7 +166,8 @@ def test_concurrent_create_race_resolves_existing_row(
 
 
 def test_existing_task_row_skips_assigner_lookup(
-    auth_context, django_assert_num_queries
+    auth_context: tuple[User, Organization],
+    django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
     """The warm path costs one query and never resolves the assigner."""
     _, org = auth_context
@@ -186,7 +193,9 @@ def test_existing_task_row_skips_assigner_lookup(
         current_provenance.reset(reset)
 
 
-def test_existing_task_row_survives_missing_organization(auth_context) -> None:
+def test_existing_task_row_survives_missing_organization(
+    auth_context: tuple[User, Organization],
+) -> None:
     """An existing row is returned even when the auth context lacks an org."""
     user, org = auth_context
     existing = Task.objects.create(
@@ -211,7 +220,9 @@ def test_existing_task_row_survives_missing_organization(auth_context) -> None:
         organization_var.reset(reset_org)
 
 
-def test_task_of_another_organization_is_refused(auth_context) -> None:
+def test_task_of_another_organization_is_refused(
+    auth_context: tuple[User, Organization],
+) -> None:
     """A task that ran in another org is never attached to this org's rows."""
     user, _ = auth_context
     elsewhere = Organization.objects.create(slug="other_org")
@@ -237,7 +248,7 @@ def test_task_of_another_organization_is_refused(auth_context) -> None:
 
 
 def test_lost_race_to_another_organization_is_refused(
-    auth_context, monkeypatch
+    auth_context: tuple[User, Organization], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The race fallback applies the same organization check as the warm path."""
     from django.db import IntegrityError
@@ -246,7 +257,7 @@ def test_lost_race_to_another_organization_is_refused(
     elsewhere = Organization.objects.create(slug="other_org")
     real_create = Task.objects.create
 
-    def lost_race(**kwargs):
+    def lost_race(**kwargs: Any) -> NoReturn:
         real_create(
             task_id="task-race-foreign",
             root_task_id="task-race-foreign",

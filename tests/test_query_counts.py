@@ -9,7 +9,9 @@ django_assert_num_queries able to capture the queries.
 import strawberry
 from asgiref.sync import async_to_sync
 from kante.context import HttpContext, UniversalRequest
+from pytest_django import DjangoAssertNumQueries
 from strawberry.http.temporal_response import TemporalResponse
+from strawberry.types import ExecutionResult
 from strawberry_django.optimizer import DjangoOptimizerExtension
 
 from test_project.schema import Query
@@ -40,11 +42,13 @@ def _context() -> HttpContext:
     )
 
 
-def _execute():
+def _execute() -> ExecutionResult:
     return async_to_sync(schema.execute)(QUERY, context_value=_context())
 
 
-def test_effective_changes_is_batched(db, django_assert_num_queries) -> None:
+def test_effective_changes_is_batched(
+    db: None, django_assert_num_queries: DjangoAssertNumQueries
+) -> None:
     """All of an instance's entries resolve from one sibling-history query."""
     model = MyModel.objects.create(your_field="a")
     for value in ("b", "c"):
@@ -74,7 +78,7 @@ def test_effective_changes_is_batched(db, django_assert_num_queries) -> None:
 
 
 def test_effective_changes_batched_across_instances(
-    db, django_assert_max_num_queries
+    db: None, django_assert_max_num_queries: DjangoAssertNumQueries
 ) -> None:
     """N selected instances must not mean N sibling-history queries."""
     for i in range(4):

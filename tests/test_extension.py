@@ -1,5 +1,6 @@
 """Unit tests for KoherentExtension's provenance-context lifecycle."""
 
+from collections.abc import AsyncIterator
 from types import SimpleNamespace
 
 import pytest
@@ -13,7 +14,10 @@ from koherent.vars import current_provenance, current_task
 from tests.conftest import provenance_obj
 
 
-def _extension(context, operation_type=OperationType.QUERY) -> KoherentExtension:
+def _extension(
+    context: object,
+    operation_type: OperationType = OperationType.QUERY,
+) -> KoherentExtension:
     ext = KoherentExtension()
     ext.execution_context = SimpleNamespace(
         context=context, operation_type=operation_type
@@ -43,7 +47,7 @@ def _payload() -> ProvenanceToken:
     return provenance_obj(tsk="task-e")
 
 
-async def _finish(gen) -> None:
+async def _finish(gen: AsyncIterator[None]) -> None:
     with pytest.raises(StopAsyncIteration):
         await gen.__anext__()
 

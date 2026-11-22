@@ -58,7 +58,9 @@ def _task_headers(auth_headers: dict[str, str], tsk: str) -> dict[str, str]:
 
 
 @pytest.mark.asyncio
-async def test_filter_by_task_id(transactional_db, auth_headers) -> None:
+async def test_filter_by_task_id(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """Filtering by the task id returns only matching models."""
     a_id = await create_model(_task_headers(auth_headers, "task-a"), "a")
     await create_model(_task_headers(auth_headers, "task-b"), "b")
@@ -72,7 +74,9 @@ async def test_filter_by_task_id(transactional_db, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_filter_by_task_id_is_exact(transactional_db, auth_headers) -> None:
+async def test_filter_by_task_id_is_exact(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """The task id match is exact, not a substring search."""
     a_id = await create_model(_task_headers(auth_headers, "alpha-task"), "a")
     await create_model(_task_headers(auth_headers, "beta-task"), "b")
@@ -89,7 +93,9 @@ async def test_filter_by_task_id_is_exact(transactional_db, auth_headers) -> Non
 
 
 @pytest.mark.asyncio
-async def test_filter_by_entry_kind(transactional_db, auth_headers) -> None:
+async def test_filter_by_entry_kind(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """Filtering by the entry kind distinguishes created-only from updated models."""
     headers = _task_headers(auth_headers, "task-kind")
     updated_id = await create_model(headers, "will-change")
@@ -106,7 +112,9 @@ async def test_filter_by_entry_kind(transactional_db, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_filter_by_agent_client_id(transactional_db, auth_headers) -> None:
+async def test_filter_by_agent_client_id(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """The task's agent client id is filterable through the drop-in path."""
     headers = {
         **auth_headers,
@@ -122,7 +130,9 @@ async def test_filter_by_agent_client_id(transactional_db, auth_headers) -> None
 
 
 @pytest.mark.asyncio
-async def test_filter_returns_each_model_once(transactional_db, auth_headers) -> None:
+async def test_filter_returns_each_model_once(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """Several matching history rows must not duplicate the model in the result.
 
     Filtering across the one-to-many provenance relation joins one row per
@@ -138,7 +148,9 @@ async def test_filter_returns_each_model_once(transactional_db, auth_headers) ->
 
 
 @pytest.mark.asyncio
-async def test_filter_by_changed_by(transactional_db, auth_headers) -> None:
+async def test_filter_by_changed_by(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """The user who made the change is filterable by their sub."""
     a_id = await create_model(auth_headers, "a")  # history_user is the static sub "1"
 
@@ -150,7 +162,9 @@ async def test_filter_by_changed_by(transactional_db, auth_headers) -> None:
 
 
 @pytest.mark.asyncio
-async def test_filter_by_issuer(transactional_db, auth_headers) -> None:
+async def test_filter_by_issuer(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """The provenance issuer of the task is filterable."""
     a_id = await create_model(_task_headers(auth_headers, "task-iss"), "a")
 
@@ -163,7 +177,7 @@ async def test_filter_by_issuer(transactional_db, auth_headers) -> None:
 
 @pytest.mark.asyncio
 async def test_filter_by_changed_since_and_before(
-    transactional_db, auth_headers
+    transactional_db: None, auth_headers: dict[str, str]
 ) -> None:
     """The date predicates bound the change date in the right direction."""
     a_id = await create_model(auth_headers, "a")
@@ -190,7 +204,7 @@ async def test_filter_by_changed_since_and_before(
 
 @pytest.mark.asyncio
 async def test_combined_predicates_match_same_entry(
-    transactional_db, auth_headers
+    transactional_db: None, auth_headers: dict[str, str]
 ) -> None:
     """Predicates in one provenance filter must be satisfied by the same entry."""
     a_id = await create_model(
@@ -214,7 +228,9 @@ async def test_combined_predicates_match_same_entry(
 
 
 @pytest.mark.asyncio
-async def test_filter_with_null_task_entries(transactional_db, auth_headers) -> None:
+async def test_filter_with_null_task_entries(
+    transactional_db: None, auth_headers: dict[str, str]
+) -> None:
     """Entries created without a token (task is null) don't break task traversal."""
     untokened_id = await create_model(auth_headers, "untokened")  # entry.task is None
     tokened_id = await create_model(_task_headers(auth_headers, "task-a"), "tokened")

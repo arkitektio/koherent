@@ -9,6 +9,7 @@ from asgiref.sync import sync_to_async
 from authentikate.strawberry.types import Client, Organization, User
 from django.db import models
 from kante.types import Info
+from simple_history.models import HistoricalChanges
 from strawberry.dataloader import DataLoader
 from strawberry.scalars import JSON
 
@@ -119,7 +120,7 @@ def _build_prev_maps(rows: list[Any]) -> tuple[dict[Any, Any], dict[Any, Any]]:
 _JSON_NATIVE = (str, int, float, bool, type(None))
 
 
-def _to_json_safe(value: Any) -> Any:
+def _to_json_safe(value: object) -> JSON:
     """Coerce a raw history field value to something the JSON scalar can encode.
 
     Native JSON types (and nested dict/list of them) pass through; anything else
@@ -127,15 +128,17 @@ def _to_json_safe(value: Any) -> Any:
     strawberry's JSON scalar serializes through the stdlib JSON encoder.
     """
     if isinstance(value, _JSON_NATIVE):
-        return value
+        return JSON(value)
     if isinstance(value, dict):
-        return {str(k): _to_json_safe(v) for k, v in value.items()}
+        return JSON({str(k): _to_json_safe(v) for k, v in value.items()})
     if isinstance(value, (list, tuple)):
-        return [_to_json_safe(v) for v in value]
-    return str(value)
+        return JSON([_to_json_safe(v) for v in value])
+    return JSON(str(value))
 
 
-def _changes_for(new_record: Any, old_record: Any | None) -> list[ModelChange]:
+def _changes_for(
+    new_record: HistoricalChanges, old_record: HistoricalChanges | None
+) -> list[ModelChange]:
     """Diff a history row against its previous record."""
     if old_record is None:
         return []

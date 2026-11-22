@@ -1,5 +1,7 @@
 """Unit tests for the pre_create_historical_record signal handler."""
 
+from collections.abc import Iterator
+
 import pytest
 from authentikate.base_models import StaticToken
 from authentikate.models import Client, Organization, User
@@ -11,7 +13,7 @@ from tests.conftest import provenance_obj
 
 
 @pytest.fixture
-def request_context(db):
+def request_context(db: None) -> Iterator[tuple[User, Client]]:
     """A full request-like auth context: user, client, org, token and provenance."""
     user = User.objects.create(sub="1", iss="static_issuer", username="static_issuer_1")
     org = Organization.objects.create(slug="static_org")
@@ -32,7 +34,7 @@ def request_context(db):
 
 
 @pytest.fixture
-def no_context(db):
+def no_context(db: None) -> Iterator[None]:
     """An explicitly empty auth context (guards against contextvar leaks)."""
     resets = [
         (token_var, token_var.set(None)),
@@ -47,7 +49,7 @@ def no_context(db):
         var.reset(reset)
 
 
-def test_history_entry_is_attributed(request_context) -> None:
+def test_history_entry_is_attributed(request_context: tuple[User, Client]) -> None:
     """Creating a model under a request context attributes the history entry."""
     user, client = request_context
     model = MyModel.objects.create(your_field="a")
@@ -59,7 +61,7 @@ def test_history_entry_is_attributed(request_context) -> None:
     assert entry.task.task_id == "task-s"
 
 
-def test_updates_share_the_request_task(request_context) -> None:
+def test_updates_share_the_request_task(request_context: tuple[User, Client]) -> None:
     """Every change within one request context links to the same task row."""
     model = MyModel.objects.create(your_field="a")
     model.your_field = "b"
@@ -70,7 +72,7 @@ def test_updates_share_the_request_task(request_context) -> None:
     assert len(tasks) == 1
 
 
-def test_history_entry_without_context_is_unattributed(no_context) -> None:
+def test_history_entry_without_context_is_unattributed(no_context: None) -> None:
     """Without an auth context the entry is recorded with empty attribution."""
     model = MyModel.objects.create(your_field="a")
 

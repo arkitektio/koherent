@@ -125,7 +125,7 @@ class _TickingTimezone:
         self._last = now
         return now
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> object:
         return getattr(self._timezone, name)
 
 
