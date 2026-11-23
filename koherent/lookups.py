@@ -48,10 +48,12 @@ def created_under(
     a history.
     """
     if records_creation_through(model):
-        condition = Q(**{f"{CREATED_THROUGH}__root_task_id": root_task_id})
-        if organization is not None:
-            condition &= Q(**{f"{CREATED_THROUGH}__organization": organization})
-        return condition
+        if organization is None:
+            return Q(created_through__root_task_id=root_task_id)
+        return Q(
+            created_through__root_task_id=root_task_id,
+            created_through__organization=organization,
+        )
     try:
         history = get_history_model_for_model(model)
     except NotHistoricalModelError:
