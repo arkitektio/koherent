@@ -45,6 +45,13 @@ class ProvenanceFilter:
         """Exact match against the task's id."""
         return Q(**{f"{prefix}task__task_id": value})
 
+    @strawberry_django.filter_field(
+        description="The root task (the workflow) the change ran under."
+    )
+    def root_task_id(self, value: str, prefix: str) -> Q:
+        """Exact match against the root task id of the task's causal tree."""
+        return Q(**{f"{prefix}task__root_task_id": value})
+
     @strawberry_django.filter_field(description="The executing agent client id.")
     def agent_client_id(self, value: str, prefix: str) -> Q:
         """Exact match against the task's executing agent client id."""

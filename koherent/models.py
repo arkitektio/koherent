@@ -22,7 +22,9 @@ class Task(models.Model):
         help_text="The immediate parent task id, if any.",
     )
     root_task_id = models.CharField(
-        max_length=1000, help_text="The root task id of the whole causal tree."
+        max_length=1000,
+        db_index=True,
+        help_text="The root task id of the whole causal tree (the workflow).",
     )
     assigner = models.ForeignKey(
         settings.AUTH_USER_MODEL,

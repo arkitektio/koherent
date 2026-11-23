@@ -39,3 +39,18 @@ class CachedModel(Cached):
     name = models.CharField(max_length=1000, default="", blank=True)
     note = models.CharField(max_length=1000, default="", blank=True)
     provenance = ProvenanceField(excluded_fields=["note"])
+
+
+class StampedModel(models.Model):
+    """A model stamping the task that created it, like mikro's datasets."""
+
+    name = models.CharField(max_length=1000, default="", blank=True)
+    created_through = models.ForeignKey(
+        "koherent.Task", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+
+class PlainModel(models.Model):
+    """A model recording nothing about what created it."""
+
+    name = models.CharField(max_length=1000, default="", blank=True)
